@@ -10,14 +10,20 @@
         ],
         'request' => [
             'class' => \App\ServiceProviders\HttpRequestServiceProvider::class,
-            'immediate' => false
         ],
         'session' => [
             'class' => \App\ServiceProviders\SessionServiceProvider::class,
-            'immediate' => false
         ],
         'fileEngine' => [
             'class' => \App\ServiceProviders\FileSystemsProvider::class,
-            'immediate' => false
+        ],
+        'realm' => [
+            'class' => \App\ServiceProviders\RealmProvider::class,
+        ],
+        'router' => [
+            'class' => \App\ServiceProviders\RouterProvider::class,
+        ],
+        'auth' => [
+            'class' => \App\ServiceProviders\AuthServiceProvider::class
         ]
     ];

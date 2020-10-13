@@ -6,29 +6,38 @@
     namespace App\ServiceProviders;
 
 
-
     use Sourcegr\Framework\Http\Session\SessionHandler;
 
     class SessionServiceProvider extends ServiceProvider
     {
+        protected $service;
+
         public function init()
         {
+            return $this;
+        }
+
+        public function getService() {
+            if ($this->service) {
+                return $this->service;
+            }
+
             $config = $this->app->loadConfig('session');
 
             $configName = $config['driver'];
             $driverName = $config['drivers'][$configName]['class'];
 
-//            die($driverName);
             if (!class_exists($driverName)) {
                 throw new \Exception('SessionServiceProvider: class doesn\'t exist');
             }
 
-            $driver = new $driverName($this->app, $config);
+            $driver = new $driverName($config);
 
-            return new SessionHandler($this->app, $driver);
+            return $this->service = new SessionHandler($driver);
         }
 
-        public function setCookieParams($config) {
+        public function setCookieParams($config)
+        {
             // do something
         }
     }

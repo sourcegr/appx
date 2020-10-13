@@ -12,28 +12,28 @@
 
     class FreakquentServiceProvider extends ServiceProvider
     {
-        /**
-         * @var App null
-         */
-        public $app = null;
+        protected $service = null;
 
-        /**
-         * @return \Closure
-         */
         public function init()
         {
+            return $this;
+        }
+
+        public function getService()
+        {
+            if ($this->service) {
+                return $this->service;
+            }
+
             $databaseConfig = $this->app->conf('database');
             $dbParams = $this->app->loadConfig('database');
+
             $config = $dbParams[$databaseConfig] ?? null;
 
             if (!$config) {
-                throw new InvalidArgumentException('please set connection settings for '. $databaseConfig.' in /config/database.php');
+                throw new InvalidArgumentException('please set connection settings for ' . $databaseConfig . ' in /config/database.php');
             }
 
-            $db = Freakquent::init($databaseConfig, $config);
-
-            return function() use ($db) {
-                return $db;
-            };
+            return $this->service = Freakquent::init($databaseConfig, $config);
         }
     }

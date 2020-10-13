@@ -5,12 +5,23 @@
 
     namespace App\ServiceProviders;
 
-    use Sourcegr\Framework\Http\HttpRequest;
+    use App\Http\HttpRequest;
 
     class HttpRequestServiceProvider extends ServiceProvider
     {
+        protected $service = null;
+
         public function init()
         {
-            return HttpRequest::fromHTTP();
+            return $this;
+        }
+
+        public function getService()
+        {
+            if ($this->service) {
+                return $this->service;
+            }
+
+            return $this->service = HttpRequest::fromHTTP();
         }
     }

@@ -19,4 +19,8 @@
         {
             $this->app = $app;
         }
+
+        public function getService() {
+            return null;
+        }
     }
