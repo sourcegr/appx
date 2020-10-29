@@ -7,8 +7,8 @@
 
     return [
         'root' => [
-            'engine' => \Sourcegr\Framework\Filesystem\Engines\FileSystemDrive::class,
-            'path' => App::APP_APP_PATH
-//          'path' => App::APP_STORAGE_PATH
+            'engine' => 'local',
+            'path' => App::APP_STORAGE_PATH,
+            'name' => 'Drive.local'
         ]
     ];
