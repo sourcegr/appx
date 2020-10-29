@@ -4,16 +4,20 @@
 
     namespace App;
 
-    use App\Http\HttpRequest;
+    use App\ServiceProviders\RealmFinder;
+    use Sourcegr\Framework\App\App as MainApp;
+    use Sourcegr\Framework\App\AppInterface;
+    use Sourcegr\Framework\App\ContainerInterface;
+    use Sourcegr\Framework\App\KernelInterface;
+    use Sourcegr\Framework\Base\Encryptor\Encryptor;
+    use Sourcegr\Framework\Base\Encryptor\EncryptorInterface;
+    use Sourcegr\Framework\Http\Request\HttpRequest;
+    use Sourcegr\Framework\Http\Request\RequestInterface;
+    use Sourcegr\Framework\Http\Response\HttpResponse;
+    use Sourcegr\Framework\Http\Response\ResponseInterface;
+    use Sourcegr\Framework\Http\Router\RouteManagerInterface;
 
-    use Sourcegr\Framework\Base\Helpers\Arr;
-    use Sourcegr\Framework\Base\ParameterBag;
-    use Sourcegr\Framework\Http\Boom;
-    use Sourcegr\Framework\Http\BoomException;
-    use Sourcegr\Framework\Http\Router\RouteManager;
-
-
-    class App
+    class App extends MainApp
     {
         public const APP_BASE_PATH = __DIR__ . '/../';
         public const APP_APP_PATH = self::APP_BASE_PATH . 'app/';
@@ -21,202 +25,96 @@
         public const APP_CONFIG_PATH = self::APP_BASE_PATH . 'config/';
         public const APP_WEB_PATH = self::APP_BASE_PATH . '../www/';
 
-        public static $instance;
-
-        protected $config;
-        protected $middlewares;
-        protected $shutDownCallbacks = [];
-        protected $routes;
-
         /**
-         * @var RouteManager $router
+         * @var KernelInterface $kernel
          */
-        protected $router;
-
-        /**
-         * @var HttpRequest $request
-         */
-        protected $request;
-
-        /**
-         * @var HttpResponse $response
-         */
-        protected $response = '';
-
-        public $env = 'dev';
-
-        /**
-         * @var Kernel $kernel
-         */
-        public $kernel;
+        protected $kernel;
 
 
-        # methods
-        public static function create(): App
+        public function isDownForMaintenance()
         {
-            static::$instance = static::$instance ?? new static();
-            return static::$instance;
+            return is_file(static::APP_STORAGE_PATH . '/framework/down');
         }
 
-        public static function getInstance(): App
+        protected function getPath(string $var): string
         {
-            return static::create();
+            $var = "APP_${var}_PATH";
+            return constant("static::$var");
         }
 
 
-        /**
-         * @return HttpRequest
-         */
-        public function getRequest(): HttpRequest
+        public function init(RequestInterface $request)
         {
-            return $this->request;
-        }
-
-
-        protected function __construct()
-        {
-            $this->middlewares = new ParameterBag();
-            static::$instance = $this;
-        }
-
-        public function conf($key = null)
-        {
-            return $key ? $this->config[$key] ?? null : $this->config;
-        }
-
-        public function loadConfig($config)
-        {
-            return require static::APP_CONFIG_PATH . "$config.php";
-        }
-
-
-        public function inMaintenance(): bool
-        {
-            return is_file($this->conf('maintenance_file'));
-        }
-
-        public function bootstrap()
-        {
-            # get app-wide configuration
-            $this->config = $this->loadConfig('app');
-
-            if (!$this->config) {
-                throw new \Exception('no config');
-            }
-
-            // get env
-            $this->env = $this->config['env'];
-
-            # set app environment
             $this->kernel = new Kernel($this);
 
-
-            # register all service providers
-            $this->kernel->registerServiceProviders($this->loadConfig('serviceProviders'));
-
-
-            # init all service providers
-            $this->kernel->initServiceProviders();
-        }
-
-
-        public function getService($name, $tag = null)
-        {
-            return $this->kernel->getService($name, $tag);
-        }
-
-        public function registerShutdownCallback($callable)
-        {
-            $this->shutDownCallbacks[] = $callable;
-        }
-
-
-
-
-
-
-
-
-
-
-        //
-        //
-        //
-        //
-
-
-
-        public function kickStart($request)
-        {
-            # get request service
             $this->request = $request;
-            $this->request->realm = $this->getService('realm');
-//            dd($this->kernel->services);
+            $this->container->instance('CONFIG', $this->appConfig = $this->loadConfig("app"));
 
+            $this->appConfig = $this->container->get('CONFIG');
 
-            # get the router manager object
-            $routesCallback = require $this::APP_APP_PATH . 'Routes/' . $this->request->realm . '.php';
-
-            $this->router = $this->getService('router');
-            $this->router->loadRoutes(
-                $this->request->realm,
-                $routesCallback
-            );
-
-            /** @var \Sourcegr\Framework\Http\Router\RouteMatch $route */
-            $routeMatch = $this->router->matchRoute($this->request);
-
-
-            # probably no match
-            if ($routeMatch instanceof Boom) {
-                return $routeMatch;
+            if ($request->method === 'OPTIONS') {
+                $this->kernel->handleOPTIONS();
             }
 
-            # We have a route, we can go on
-            $middleWareConfig = $this->loadConfig('middleware');
+            $this->bootstrap();
 
-            # combine global and realm middleware
-            $middlewaresStack = Arr::merge(
-                $middleWareConfig['GLOBAL'],
-                $middleWareConfig['REALM'][$this->request->realm] ?? []
-            );
 
-            $routeMiddlewares = $routeMatch->route->getMiddleware();
+            // get and register REALM
+            $REALM = RealmFinder::fromRequest($request);
+            $request->setRealm($REALM);
+            $this->container->instance('REALM', $REALM);
+            $realmConfig = $this->loadConfig("$REALM/app");
 
-            foreach ($routeMiddlewares as $middlewareName) {
-                if ($config = $middleWareConfig['ROUTE'][$middlewareName]) {
-                    $middlewaresStack = Arr::merge($middlewaresStack, Arr::ensureArray($config));
-                } else {
-                    throw new \Exception('Route Middleware not found');
-                }
-            }
+            $this->response = $this->container->make('RESPONSE');
 
-            try {
-                $this->kernel->applyMiddlewares($middlewaresStack);
-            } catch (BoomException $boom) {
-                return $boom->boom;
-            }
-            return 'a';
+            $this->container->make(KernelInterface::class);
 
-//            dd($result);
-            /*
-             * $handler = $route->getCompiledParam('callback');
-             * $handler($request);
-             * die('-');
-             */
+
+//            try {
+            $this->execServiceProviders($this->appConfig['SERVICE_PROVIDERS'], $realmConfig['SERVICE_PROVIDERS']);
+
+            // and run the middleware
+            $this->kernel->execMiddleware($this->appConfig['MIDDLEWARE'], $realmConfig['MIDDLEWARE']);
+
+
+            // get the Router Instance and search for a matching route
+            /** @var RouteManagerInterface $routeManager */
+            $routeManager = $this->container->get(RouteManagerInterface::class);
+            $routeFile = $this->loadConfigFile(static::APP_APP_PATH . 'Routes' . DIRECTORY_SEPARATOR . $REALM);
+            $match = $routeManager->matchRoute($routeFile);
+
+
+            $this->kernel->checkForBoom($match);
+            $this->kernel->execMiddleware($match->route->getMiddleware());
+            $this->kernel->handleRoute($match);
+
+            $this->prepareForShutdown();
+            $this->shutDown();
         }
 
-        public function tearDown()
-        {
-            foreach ($this->shutDownCallbacks as $callback) {
-                $callback($this->request, $this->response);
-            }
-        }
 
-        public function terminate($request, $response)
+        protected function bootstrap()
         {
-            $auth = $this->getRequest()->data->auth;
-            dd($auth->authenticate(['email' => 'papas@source.gr']));
-            dd([$request, $response]);
+            //first things first...
+            $this->container->instance(AppInterface::class, $this);
+            $this->container->alias(AppInterface::class, App::class,);
+            $this->container->alias(AppInterface::class, 'APP');
+
+            $this->container->instance(RequestInterface::class, $this->request);
+            $this->container->alias(RequestInterface::class, HttpRequest::class);
+            $this->container->alias(RequestInterface::class, 'REQUEST');
+
+            $this->container->singleton(ResponseInterface::class, HttpResponse::class);
+            $this->container->alias(ResponseInterface::class, 'RESPONSE');
+
+            $this->container->singleton(KernelInterface::class, Kernel::class);
+
+            $this->container->instance(ContainerInterface::class, $this->container);
+
+            $this->container->singleton(ExceptionHandler::class);
+
+            $encryptor = new Encryptor($this->appConfig['app_key'], $this->appConfig['encryption_cipher']);
+            $this->container->instance(EncryptorInterface::class, $encryptor);
         }
     }
+

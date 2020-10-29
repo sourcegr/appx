@@ -6,11 +6,9 @@
     use App\App;
 
     return [
-        'manager' => Sourcegr\Framework\Filesystem\FileSystemManager::class,
-        'drives' => [
-            'root' => [
-                'engine' => \Sourcegr\Framework\Filesystem\Engines\FileSystemDrive::class,
-                'path' => App::APP_STORAGE_PATH
-            ]
+        'root' => [
+            'engine' => 'local',
+            'path' => App::APP_STORAGE_PATH,
+            'name' => 'Drive.local'
         ]
     ];

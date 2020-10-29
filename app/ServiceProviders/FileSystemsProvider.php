@@ -6,31 +6,35 @@
     namespace App\ServiceProviders;
 
 
+    use Sourcegr\Framework\Base\ServiceProvider;
+    use Sourcegr\Framework\Filesystem\FileSystemManager;
+    use Sourcegr\Framework\Filesystem\FileSystemManagerInterface;
+
+
     class FileSystemsProvider extends ServiceProvider
     {
-        protected $manager;
 
-        public function init()
+        public function register()
         {
-            return $this;
+            $config = $this->loadConfig('filesystems');
+            $manager = new FileSystemManager();
+
+            foreach ($config as $driveName => $driveConfig) {
+                $manager->createDrive($driveName, $driveConfig);
+
+                // register if it is a named drive
+                if ($driveConfig['name'] ?? null) {
+                    $this->container->instance(
+                        $driveConfig['name'],
+                        $manager->drive($driveName)
+                    );
+                }
+            }
+
+            $this->container->instance(FileSystemManagerInterface::class, $manager);
         }
 
-        public function getService() {
-            if ($this->manager) {
-                return $this->manager;
-            }
+        public function boot() {
 
-            $config = $this->app->loadConfig('filesystems');
-
-            $this->manager = new $config['manager']();
-
-            $drives = $config['drives'];
-
-            foreach ($drives as $driveName => $driveConfig) {
-                $drive = new $driveConfig['engine']($driveConfig['path']);
-                $this->manager->attachDrive($driveName, $drive);
-            }
-
-            return $this->manager;
         }
     }
