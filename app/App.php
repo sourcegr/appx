@@ -5,6 +5,7 @@
     namespace App;
 
     use App\ServiceProviders\RealmFinder;
+    use Dotenv\Dotenv;
     use Sourcegr\Framework\App\App as MainApp;
     use Sourcegr\Framework\App\AppInterface;
     use Sourcegr\Framework\App\ContainerInterface;
@@ -30,6 +31,12 @@
          */
         protected $kernel;
 
+        public function __construct()
+        {
+            parent::__construct();
+            $dotenv = Dotenv::createImmutable(__DIR__ . DIRECTORY_SEPARATOR . '..');
+            $dotenv->load();
+        }
 
         public function isDownForMaintenance()
         {
