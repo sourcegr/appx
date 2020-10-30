@@ -36,6 +36,9 @@
             parent::__construct();
             $dotenv = Dotenv::createImmutable(__DIR__ . DIRECTORY_SEPARATOR . '..');
             $dotenv->load();
+            $dotenv->required('SESSION_LIFETIME')->isInteger();
+            $dotenv->ifPresent('SESSION_SECURE_COOKIE')->isBoolean();
+            $dotenv->ifPresent('SESSION_HTTP_ONLY')->isBoolean();
         }
 
         public function isDownForMaintenance()
