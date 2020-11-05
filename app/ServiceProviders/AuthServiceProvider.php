@@ -74,6 +74,7 @@
             if (!$default || !$this->container->has('AuthUserProviders.' . $default)){
                 throw new \Exception('AuthServiceProvider: The default engine does not exist');
             }
+
             $r->auth = $this->container->get('AuthUserProviders.' . $default);
             $this->container->alias('AuthUserProviders.' . $default, 'AuthUserProvider');
 

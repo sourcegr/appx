@@ -31,10 +31,4 @@
             $result = $this->userProvider->getUserFromHash($hash);
             return $result;
         }
-
-        public function authenticate(array $credentials) {
-            return $this->userProvider->authenticate($credentials);
-        }
-
-
     }

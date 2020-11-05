@@ -17,6 +17,7 @@
 
         'MIDDLEWARE' => [
             App\Http\Middleware\StartSessionMiddleware::class,
+            App\Http\Middleware\AuthenticateSessionMiddleware::class,
             App\Http\Middleware\TestMiddleware::class,
             App\Http\Middleware\VerifyCSRFMiddleware::class,
             App\Http\Middleware\SendCookiesMiddleware::class,

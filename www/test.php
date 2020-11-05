@@ -1,5 +1,8 @@
 <?php
 
+    header('Location:/app');
+    die();
+
     use Sourcegr\Framework\Appex\Appx;
     use Sourcegr\Framework\Appex\ViewManager;
 

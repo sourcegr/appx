@@ -31,8 +31,7 @@
 
             // actual checks...
             // get the correct token from the session
-            $serverToken = $this->request->session->getToken();
-            // todo check if token is empty
+            $serverToken = $this->request->session->getCSRF();
 
             $xcsrf = $this->request->getHeader('X-CSRF-TOKEN');
             if ($xcsrf) {
@@ -43,22 +42,21 @@
             }
 
             $token = $this->request->getHeader('C-CSRF-TOKEN');
+
             if ($token === $serverToken) {
                 return $request;
             }
 
-            // todo check also in the POST variables
-            $tokenName = $this->request->session->getTokenName();
+            // check also in the POST variables
+            $tokenName = $this->request->session->getCSRFFieldName();
             $token = $this->request->get($tokenName);
 
             if ($token === $serverToken) {
-                return $request;
+                return $response;
             }
 
 
-            return new Boom(HTTPResponseCode::HTTP_FORBIDDEN, [
-                'message' => 'CSRF/XSRF paramter missing'
-            ], true);
+            return new Boom(HTTPResponseCode::HTTP_FORBIDDEN, 'CSRF/XSRF paramter missing', true);
         }
 
 
