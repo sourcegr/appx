@@ -2,44 +2,44 @@
 
     declare(strict_types=1);
 
-    use App\Http\Controllers\LoginController;
+    use App\Controllers\LoginController;
+    use App\Http\Controllers\DownloadController;
     use App\Routes\Middleware\NeedsLoginMiddleware;
     use App\Routes\Middleware\RedirectIfAuthenticatedMiddleware;
     use Sourcegr\Framework\Base\View\ViewManager;
     use Sourcegr\Framework\Http\Redirect\Redirect;
+    use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Router\RouteCollection;
 
 
     return function (RouteCollection $routeCollection) {
-
-        $routeCollection->GET('/', function(Redirect $r) {
+        $routeCollection->GET('/', function (Redirect $r) {
             return $r->to('/app');
         });
 
 
-        $routeCollection->GET('/app',function (ViewManager $viewManager) {
-            return $viewManager->make('main');
-        })->setMiddleware(NeedsLoginMiddleware::class);
+        $routeCollection->GET('/app/?any', function (ViewManager $viewManager, RequestInterface $request) {
+            return $viewManager->make('main')
+                ->with('user', $request->user)
+                ->with('token', $request->user['token']);
+            })->setMiddleware(NeedsLoginMiddleware::class)->matchesAll();
 
 
-        $routeCollection->GET('login', LoginController::class, 'login')->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
+        $routeCollection->GET('login', LoginController::class, 'login')
+            ->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
 
 
-        $routeCollection->POST('login', LoginController::class, 'authenticate')->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
-
+        $routeCollection->POST('login', LoginController::class, 'authenticate')
+            ->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
 
         $routeCollection->GET('logout', LoginController::class, 'logout');
 
-
-
+        $routeCollection->GET('downloads/?dl', DownloadController::class, 'choose')->matchesAll();
 
 
         //        $routeCollection->rest('/contact', ContactController::class)
         //            ->allow('get, post, put, delete')
         //            ->exclude('patch');
-
-
-
 
 
 //        $routeCollection->GET('/plain',

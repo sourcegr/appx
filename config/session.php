@@ -6,7 +6,7 @@
 
     return [
         'DRIVER' => env('SESSION_DRIVER', 'DB'),
-        'LIFETIME' => env('SESSION_LIFETIME', 120), // minutes
+        'LIFETIME' => env('SESSION_LIFETIME', 30 * 24 * 60), // 1 month
         'ENCRYPT' => true,
         'COOKIE' => env('SESSION_COOKIE', 'appx_session'),
         'PATH' => env('SESSION_PATH', '/'),
@@ -25,7 +25,7 @@
 
             'DB' => [
                 'connection' => 'default',
-                'table' => 'sessions'
+                'table' => 'internal_sessions'
             ],
 
         ]

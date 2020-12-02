@@ -3,13 +3,12 @@
     declare(strict_types=1);
 
 
-    namespace App\Http\Controllers;
+    namespace App\Controllers;
 
 
     use Sourcegr\Framework\Base\View\ViewManager;
     use Sourcegr\Framework\Http\Redirect\Redirect;
     use Sourcegr\Framework\Http\Request\RequestInterface;
-    use Sourcegr\Framework\Http\Session\SessionInterface;
 
     class LoginController
     {
@@ -19,7 +18,7 @@
             $password = $request->get('password');
 
 
-            if($request->auth->authenticate([
+            if ($request->auth->authenticate([
                 'email' => $email,
                 'password' => $password,
             ])){
@@ -37,5 +36,4 @@
             $request->auth->logout();
             return $redirect->to('/app');
         }
-
     }

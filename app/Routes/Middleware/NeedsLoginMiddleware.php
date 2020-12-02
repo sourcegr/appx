@@ -15,7 +15,7 @@
     {
         public function handle(HttpRequest $request, Redirect $redirect)
         {
-            $u = $request->user;
+            $u = $request->auth->user();
 
             if (!$u) {
                 if ($request->expectsJson()) {

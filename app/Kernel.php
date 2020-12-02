@@ -10,6 +10,7 @@
     use Sourcegr\Framework\App\ContainerInterface;
     use Sourcegr\Framework\App\KernelInterface;
     use Sourcegr\Framework\Http\Boom;
+    use Sourcegr\Framework\Http\BoomException;
     use Sourcegr\Framework\Http\Response\HeaderBag;
     use Sourcegr\Framework\Http\Response\HttpResponse;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
@@ -59,13 +60,19 @@
             $callback = $route->callback;
 
 
-            $handlerResult = '';
-
-            if (is_string($callback)) {
-                $handlerResult = $container->makeFromString($callback, $vars);
-            } elseif ($callback instanceof Closure) {
-                $handlerResult = $container->call($callback, $vars);
+            try {
+                if (is_string($callback)) {
+                    $handlerResult = $container->makeFromString($callback, $vars);
+                } elseif ($callback instanceof Closure) {
+                    $handlerResult = $container->call($callback, $vars);
+                }
+            } catch(\ReflectionException $e) {
+                $m = explode("@", $callback)[1] ?? $callback;
+                $handlerResult = new Boom(HTTPResponseCode::HTTP_NOT_IMPLEMENTED, "method $m is not implemented (it should, though)");
+            } catch(BoomException $e) {
+                $handlerResult = $e->boom;
             }
+
 
             $this->checkForBoom($handlerResult);
 
