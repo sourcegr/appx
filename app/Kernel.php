@@ -14,6 +14,7 @@
     use Sourcegr\Framework\Http\Response\HeaderBag;
     use Sourcegr\Framework\Http\Response\HttpResponse;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
+    use Sourcegr\Framework\Http\Response\ResponseInterface;
     use Sourcegr\Framework\Http\Router\Route;
     use Sourcegr\Framework\Http\Router\RouteMatchInterface;
 
@@ -42,9 +43,6 @@
             /** @var ContainerInterface $container */
             $container = $this->app->container;
 
-            /** @var array $vars */
-            $vars = $routeMatch->vars;
-
             /** @var Route $route */
             $route = $routeMatch->route;
 
@@ -62,9 +60,9 @@
 
             try {
                 if (is_string($callback)) {
-                    $handlerResult = $container->makeFromString($callback, $vars);
+                    $handlerResult = $container->makeFromString($callback, $routeMatch->vars);
                 } elseif ($callback instanceof Closure) {
-                    $handlerResult = $container->call($callback, $vars);
+                    $handlerResult = $container->call($callback, $routeMatch->vars);
                 }
             } catch(\ReflectionException $e) {
                 $m = explode("@", $callback)[1] ?? $callback;
@@ -112,11 +110,14 @@
 
             $groups = func_get_args();
 
+
             foreach ($groups as $middlewares) {
+
                 //ensure it is an array
                 if (!is_array($middlewares)) {
                     $middlewares = [$middlewares];
                 }
+
 
                 foreach ($middlewares as $middleware) {
                     if ($this->app->middlewareBooted($middleware)) {
@@ -124,7 +125,12 @@
                     }
 
                     $response = $this->app->container->call("$middleware@handle", ['response' => $response]);
+
                     $this->checkForBoom($response);
+
+                    if (!($response instanceof ResponseInterface)) {
+                        throw new \Exception($middleware . " should return an instance of ResponseInterface. Well, it does not");
+                    }
                 }
             }
 

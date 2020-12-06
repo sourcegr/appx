@@ -6,6 +6,7 @@
 
     use App\ServiceProviders\RealmFinder;
     use Dotenv\Dotenv;
+    use ErrorException;
     use Sourcegr\Framework\App\App as MainApp;
     use Sourcegr\Framework\App\AppInterface;
     use Sourcegr\Framework\App\ContainerInterface;
@@ -34,12 +35,23 @@
         public function __construct()
         {
             parent::__construct();
+            set_error_handler([$this, "handleError"]);
+
             $dotenv = Dotenv::createImmutable(__DIR__ . DIRECTORY_SEPARATOR . '..');
             $dotenv->load();
             $dotenv->required('SESSION_LIFETIME')->isInteger();
             $dotenv->ifPresent('SESSION_SECURE_COOKIE')->isBoolean();
             $dotenv->ifPresent('SESSION_HTTP_ONLY')->isBoolean();
         }
+
+        public function handleError($level, $message, $file = '', $line = 0, $context = [])
+        {
+            echo '<h1>Error</h1>';
+            if (error_reporting() & $level) {
+                throw new ErrorException($message, 0, $level, $file, $line);
+            }
+        }
+
 
         public function isDownForMaintenance()
         {

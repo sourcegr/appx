@@ -23,38 +23,48 @@
             string $slaveKey,
             $fields = '*'
         ) {
+            // bail if this is an ampty result
+            if (!count($master)) {
+                return [];
+            }
 
+            // if its a QueryBuilder, then we prob/ly have a where or something
             $slaveDB = $slave instanceof QueryBuilder ? $slave : $slave->DB();
 
+
+            // this is not an array, its probably a simple object
+            if (!($master[0] ?? null)) {
+                $master[$relationName] = $slaveDB->where($slaveKey, $master[$masterKey])->select($fields);
+                return $master;
+            }
+
+
+            // only one item, so no array_column/joins here
             if (count($master) === 1) {
                 $ent = $master[0];
                 $ent[$relationName] = $slaveDB->where($slaveKey, $ent[$masterKey])->select($fields);
-                return $ent;
-            } else {
-                $idsToSelect = array_column($master, $masterKey);
-
-                $slaveResults = $slaveDB->whereIn($slaveKey, $idsToSelect)
-//                    ->setDebug()
-                    ->select($fields);
-
-                $keyed = [];
-
-                foreach ($slaveResults as $ent) {
-                    $keyed[$ent[$slaveKey]][] = $ent;
-                }
-//                dd($keyed);
-
-                $all = [];
-                foreach ($master as $ent) {
-                    $ent[$relationName] = $keyed[$ent[$masterKey]] ?? [];
-                    $all[] = $ent;
-                }
-
-                return $all;
+                return [$ent];
             }
+
+
+            // ok this is an array, do the full
+
+            $slaveResults = $slaveDB->whereIn($slaveKey, array_column($master, $masterKey))->select($fields);
+
+            $keyed = [];
+
+            foreach ($slaveResults as $ent) {
+                $keyed[$ent[$slaveKey]][] = $ent;
+            }
+
+            $all = [];
+            foreach ($master as $ent) {
+                $ent[$relationName] = $keyed[$ent[$masterKey]] ?? [];
+                $all[] = $ent;
+            }
+
+            return $all;
         }
-
-
 
 
         public function __construct(DB $db, $table)
@@ -112,7 +122,8 @@
             return $this->DB()->where($col, $val)->count();
         }
 
-        public static function keyBy($collection, $keyField) {
+        public static function keyBy($collection, $keyField)
+        {
             $res = [];
             foreach ($collection as $item) {
                 $res[$item[$keyField]] = $item;
@@ -120,7 +131,8 @@
             return $res;
         }
 
-        public static function keyFieldBy($collection, $keyField, $column) {
+        public static function keyFieldBy($collection, $keyField, $column)
+        {
             $res = [];
             foreach ($collection as $item) {
                 $res[$item[$keyField]] = $item[$column];
@@ -133,15 +145,18 @@
             return array_column($collection, $column);
         }
 
-        public static function getEntityByCol($entity, $col, $val, $fields='*') {
+        public static function getEntityByCol($entity, $col, $val, $fields = '*')
+        {
             return $entity->where($col, $val)->select($fields);
         }
 
-        public static function getEntityByColCount($entity, $col, $val) {
+        public static function getEntityByColCount($entity, $col, $val)
+        {
             return $entity->where($col, $val)->count();
         }
 
-        public static function hasKey($collection, $col, $val) {
+        public static function hasKey($collection, $col, $val)
+        {
             return in_array($val, static::arrayFrom($collection, $col));
         }
     }

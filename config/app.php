@@ -9,7 +9,7 @@
         'encryption_cipher' => 'AES-256-CBC',
         'encrypt_cookies' => true,
         'locale' => 'en',
-        'timezone' => 'UTC',
+        'timezone' => 'Europe/Athens',
         'env' => env('APP_ENV', 'production'),
 
         'SERVICE_PROVIDERS' => [

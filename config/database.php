@@ -3,7 +3,9 @@
     declare(strict_types=1);
 
     return [
-        'default' => 'mysql',
+        'default' => 'postgress',
+//        'default' => 'mysql',
+
 
         'providers' => [
             'mysql' => [
@@ -16,15 +18,35 @@
                 'encoding' => env('DB_ENCODING', 'UTF8'),
                 'db' => env('DB_DATABASE', 'test'),
                 'pdo_params' => [
-                    PDO::MYSQL_ATTR_FOUND_ROWS   => true,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                    PDO::ATTR_CASE => PDO::CASE_NATURAL,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
+                    PDO::ATTR_STRINGIFY_FETCHES => false,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::MYSQL_ATTR_FOUND_ROWS => true,
                 ]
             ],
-            'mysql1' => [
-                // ....
-            ],
             'postgress' => [
-                // ....
-            ]
+                'active' => true,
+                'engine' => 'pgsql',
+                'host' => '127.0.0.1',
+                'user' => 'default',
+                'password' => 'secret',
+                'port' => 5432,
+                'encoding' => env('DB_ENCODING', 'UTF8'),
+                'db' => 'watercity',
+                'pdo_params' => [
+                    PDO::ATTR_CASE => PDO::CASE_NATURAL,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
+//                    PDO::ATTR_STRINGIFY_FETCHES => false,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+//                    PDO::MYSQL_ATTR_FOUND_ROWS   => true,
+                ]
+            ],
+            'mysql1' => [// ....
+            ],
         ]
     ];

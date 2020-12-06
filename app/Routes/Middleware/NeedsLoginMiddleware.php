@@ -10,10 +10,11 @@
     use Sourcegr\Framework\Http\Redirect\Redirect;
     use Sourcegr\Framework\Http\Request\HttpRequest;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
+    use Sourcegr\Framework\Http\Response\ResponseInterface;
 
     class NeedsLoginMiddleware
     {
-        public function handle(HttpRequest $request, Redirect $redirect)
+        public function handle(HttpRequest $request, Redirect $redirect, ResponseInterface $response)
         {
             $u = $request->auth->user();
 
@@ -24,6 +25,8 @@
 
                 return $redirect->to('/login');
             }
+
+            return $response;
         }
     }
 

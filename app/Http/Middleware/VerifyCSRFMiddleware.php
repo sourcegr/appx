@@ -37,14 +37,14 @@
             if ($xcsrf) {
                 $token = $this->encryptor->decrypt($xcsrf);
                 if ($token === $serverToken) {
-                    return $request;
+                    return $response;
                 }
             }
 
             $token = $this->request->getHeader('C-CSRF-TOKEN');
 
             if ($token === $serverToken) {
-                return $request;
+                return $response;
             }
 
             // check also in the POST variables
