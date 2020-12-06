@@ -12,6 +12,7 @@
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class NeedsLoginMiddleware
     {
         public function handle(HttpRequest $request, Redirect $redirect, ResponseInterface $response)

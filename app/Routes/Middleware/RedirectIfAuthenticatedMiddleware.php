@@ -10,6 +10,7 @@
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class RedirectIfAuthenticatedMiddleware
     {
         public function handle(RequestInterface $request, Redirect $redirect, ResponseInterface $response)

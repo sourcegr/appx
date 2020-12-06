@@ -12,6 +12,7 @@
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class CheckApiToken extends BaseMiddleware
     {
         public function handle(ResponseInterface $response, RequestInterface $request)

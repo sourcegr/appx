@@ -5,10 +5,10 @@
 
     namespace App\Http\Middleware;
 
+
     use App\MaintenanceGate;
     use Sourcegr\Framework\App\AppInterface;
     use Sourcegr\Framework\Http\Boom;
-    use Sourcegr\Framework\Http\BoomException;
     use Sourcegr\Framework\Http\Middleware\BaseMiddleware;
     use Sourcegr\Framework\Http\Redirect\TemporaryRedirect;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;

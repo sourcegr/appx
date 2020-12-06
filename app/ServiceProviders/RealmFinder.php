@@ -8,6 +8,7 @@
 
     use Sourcegr\Framework\Http\Request\RequestInterface;
 
+
     class RealmFinder
     {
         public const DEFAULT_REALM = 'WEB';

@@ -12,9 +12,10 @@
     use Sourcegr\Framework\Http\Response\ResponseInterface;
     use Sourcegr\Framework\Http\Session\SessionProviderInterface;
 
+
     class StartSessionMiddleware extends BaseMiddleware
     {
-        public function handle(RequestInterface $request, SessionProviderInterface $sessionProvider, ViewManager $viewManager, ResponseInterface $response)
+        public function handle(SessionProviderInterface $sessionProvider, ViewManager $viewManager, ResponseInterface $response)
         {
             $session = $sessionProvider->startSession();
             $viewManager->addGlobalParam('APPX_CSRF_TOKEN_VALUE', $session->getCSRF());
@@ -24,9 +25,7 @@
             $this->app->registerShutdownCallback(function (RequestInterface $request) {
                 $request->session->regenerateToken();
                 $request->persistSession();
-//                dd($request->session);
             });
-//            dd($request->auth, 1111);
 
             return $response;
         }

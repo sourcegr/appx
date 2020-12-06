@@ -24,8 +24,9 @@
             $this->request = $request;
         }
 
-        public function allows(array $urlRegexps) {
-            foreach ($urlRegexps as $regexp){
+        public function allows(array $urlRegexps)
+        {
+            foreach ($urlRegexps as $regexp) {
                 if (preg_match_all($regexp, $this->request->url) > 0) {
                     return true;
                 }
@@ -34,7 +35,9 @@
             return false;
         }
 
-        public function sendMaintainanceSignal() {
+
+        public function sendMaintenanceSignal()
+        {
             throw new BoomException(new Boom(HTTPResponseCode::HTTP_SERVICE_UNAVAILABLE));
         }
     }

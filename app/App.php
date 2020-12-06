@@ -19,6 +19,7 @@
     use Sourcegr\Framework\Http\Response\ResponseInterface;
     use Sourcegr\Framework\Http\Router\RouteManagerInterface;
 
+
     class App extends MainApp
     {
         public const APP_BASE_PATH = __DIR__ . '/../';
@@ -68,7 +69,6 @@
         public function init(RequestInterface $request)
         {
             $this->kernel = new Kernel($this);
-
             $this->request = $request;
             $this->container->instance('CONFIG', $this->appConfig = $this->loadConfig("app"));
 
@@ -88,12 +88,10 @@
             $realmConfig = $this->loadConfig("$REALM/app");
 
             $this->response = $this->container->make('RESPONSE');
-
             $this->container->make(KernelInterface::class);
 
-
-//            try {
             $this->execServiceProviders($this->appConfig['SERVICE_PROVIDERS'], $realmConfig['SERVICE_PROVIDERS']);
+
 
             // and run the middleware
             $this->kernel->execMiddleware($this->appConfig['MIDDLEWARE'], $realmConfig['MIDDLEWARE']);

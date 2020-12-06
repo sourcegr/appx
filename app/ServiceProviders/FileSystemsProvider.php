@@ -24,10 +24,7 @@
 
                 // register if it is a named drive
                 if ($driveConfig['name'] ?? null) {
-                    $this->container->instance(
-                        $driveConfig['name'],
-                        $manager->drive($driveName)
-                    );
+                    $this->container->instance($driveConfig['name'], $manager->drive($driveName));
                 }
             }
 

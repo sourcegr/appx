@@ -8,8 +8,8 @@
 
     use Sourcegr\Framework\Http\Middleware\BaseMiddleware;
     use Sourcegr\Framework\Http\Request\HttpRequest;
-    use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
+
 
     class CreateFreshApiTokenMiddleware extends BaseMiddleware
     {

@@ -10,6 +10,7 @@
     use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class AuthenticateSessionMiddleware extends BaseMiddleware
     {
         public function handle(ResponseInterface $response, RequestInterface $r)

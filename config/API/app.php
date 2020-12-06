@@ -2,7 +2,7 @@
 
     declare(strict_types=1);
 
-    // WEB Realm configuration
+    // API Realm configuration
 
 
     return [

@@ -22,12 +22,9 @@
             return $this;
         }
 
-        public function getLoggedInUser(){
+        public function getLoggedInUser()
+        {
             $hash = $this->driver->getUserHash();
-//            if (!$hash) {
-//                return null;
-//            }
-
             $result = $this->userProvider->getUserFromHash($hash);
             return $result;
         }

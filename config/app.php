@@ -12,16 +12,19 @@
         'timezone' => 'Europe/Athens',
         'env' => env('APP_ENV', 'production'),
 
+        // List of service providers that need to be registered
         'SERVICE_PROVIDERS' => [
             \App\ServiceProviders\RouteServiceProvider::class,
 //            \App\ServiceProviders\LoggingServiceProvider::class
         ],
 
+
+        // list of global middleware that need to be registered
         'MIDDLEWARE' => [
-            // list of global middleware that need to be registered
             App\Http\Middleware\CheckMaintenanceModeMiddleware::class
         ],
 
+        // CORS Configuration
         'CORS' => [
             'Access-Control-Expose-Headers' => 'ETag, Link, Location, Retry-After',
             'Access-Control-Allow-Headers' => 'Authorization, Content-Type, Accept-Encoding, X-Requested-With, User-Agent, ETag, Link, Location, Retry-After',

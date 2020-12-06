@@ -23,6 +23,7 @@
             $this->container->bind(SessionProviderInterface::class, SessionProvider::class, true);
         }
 
+
         public function boot(SessionProviderInterface $sp, AppInterface $app) //ResponseInterface $response)
         {
             $config = $this->loadConfig('session');

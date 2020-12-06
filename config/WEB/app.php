@@ -7,12 +7,12 @@
 
     return [
         'SERVICE_PROVIDERS' => [
-            \App\ServiceProviders\DBServiceProvider::class,
-            \App\ServiceProviders\HashingServiceProvider::class,
-            \App\ServiceProviders\SessionServiceProvider::class,
+            App\ServiceProviders\DBServiceProvider::class,
+            App\ServiceProviders\HashingServiceProvider::class,
+            App\ServiceProviders\SessionServiceProvider::class,
             App\ServiceProviders\ViewServiceProvider::class,
-            \App\ServiceProviders\FileSystemsProvider::class,
-            \App\ServiceProviders\AuthServiceProvider::class
+            App\ServiceProviders\FileSystemsProvider::class,
+            App\ServiceProviders\AuthServiceProvider::class
         ],
 
         'MIDDLEWARE' => [

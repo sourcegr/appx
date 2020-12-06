@@ -6,8 +6,8 @@
     namespace App\ServiceProviders;
 
 
-
     use Sourcegr\Framework\Base\ServiceProvider;
+
 
     class LoggingServiceProvider extends ServiceProvider
     {
@@ -15,12 +15,14 @@
 
         public function register()
         {
+            // fixme todo
             $this->config = $this->loadConfig('logging');
         }
 
 
         public function boot()
         {
+            // fixme todo
             $default = $this->config['default'];
         }
     }

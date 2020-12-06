@@ -27,7 +27,6 @@
 
             $allProviders = $config['REALM'][$realm];
 
-
             $manager = new AuthUserProviderManager();
 
             $this->container->instance(AuthUserProviderManagerInterface::class, $manager);
@@ -50,15 +49,15 @@
                         throw new \Exception('AuthServiceProvider: No driver configured');
                 }
 
-                $this->container->singleton('AuthUserProviders.' . $providerName,
+                $this->container->singleton(
+                    'AuthUserProviders.' . $providerName,
                     function ($container) use ($providerName, $providerConfig, $guardClass, $guardConfig) {
                         $guard = $this->container->make($guardClass, ['config' => $guardConfig]);
                         return $this->setUpProvider($providerName, $providerConfig, $guard);
-                    });
-
+                    }
+                );
 
             }
-
 
             $this->config = $config;
             $this->manager = $manager;
@@ -71,19 +70,17 @@
             $default = $this->config['default'][$realm] ?? null;
 
 
-            if (!$default || !$this->container->has('AuthUserProviders.' . $default)){
+            if (!$default || !$this->container->has('AuthUserProviders.' . $default)) {
                 throw new \Exception('AuthServiceProvider: The default engine does not exist');
             }
 
             $r->auth = $this->container->get('AuthUserProviders.' . $default);
             $this->container->alias('AuthUserProviders.' . $default, 'AuthUserProvider');
-
         }
 
 
         protected function setUpProvider($providerName, $providerConfig, $guard)
         {
-
             switch ($providerConfig['engine']) {
                 case 'DB':
                     $connectionName = $providerConfig['connection'] ?? 'default';
@@ -95,7 +92,6 @@
                     $hasher = $this->container->get('HashProviders.' . $hasherName);
 
                     $provider = $this->manager->createProvider($providerName, $providerConfig);
-
                     $provider->setQueryBuilder($db);
                     $provider->setHasher($hasher);
 

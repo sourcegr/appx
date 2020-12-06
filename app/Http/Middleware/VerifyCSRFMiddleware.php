@@ -13,6 +13,7 @@
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class VerifyCSRFMiddleware extends BaseMiddleware
     {
         protected $skipRegExps = [];
@@ -34,6 +35,7 @@
             $serverToken = $this->request->session->getCSRF();
 
             $xcsrf = $this->request->getHeader('X-CSRF-TOKEN');
+
             if ($xcsrf) {
                 $token = $this->encryptor->decrypt($xcsrf);
                 if ($token === $serverToken) {
@@ -87,12 +89,5 @@
 
         protected function verifyToken($token)
         {
-
         }
     }
-
-    //$this->app->registerShutdownCallback(function () {
-    //send cookies if they should be sent
-    //$response->headers->set();
-    //echo "TODO FIX VerifyCSRFMiddleware ". __FILE__ .'<hr>';
-    //});

@@ -9,12 +9,13 @@
     use Sourcegr\Framework\Http\Middleware\BaseMiddleware;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
 
+
     class SendCookiesMiddleware extends BaseMiddleware
     {
         public function handle(ResponseInterface $response)
         {
             // shutdown callback
-            $this->app->registerShutdownCallback(function(ResponseInterface $response) {
+            $this->app->registerShutdownCallback(function (ResponseInterface $response) {
                 // send cookies if they should be sent
                 $response->sendCookies();
             });

@@ -11,11 +11,12 @@
                     'driver' => 'token',
                     'provider' => 'users',
 
-                    'driver_params' => [ // optional, if you want to allow get/post lookup for the token
-                        // otherwise only searches for the Authorization: Bearer XXXXXX
+                    'driver_params' => [
+                        // optional, if you want to allow get/post lookup for the token
+                        // otherwise only looks for the Authorization: Bearer XXXXXX header
                         'allow_GET' => false,
                         'allow_POST' => false,
-                        'token_field' => 'token', // optional. Will get the token_field fromm the provider
+                        'token_field' => 'token', // optional. Will get the token_field from the provider
                     ]
                 ]
             ],
@@ -46,6 +47,4 @@
             'API' => 'token',
             'WEB' => 'session',
         ]
-
-
     ];

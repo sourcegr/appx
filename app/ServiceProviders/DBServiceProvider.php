@@ -13,6 +13,7 @@
     use Sourcegr\Framework\Database\QueryBuilder\DB;
     use Sourcegr\Framework\Database\QueryBuilder\DBInterface;
 
+
     class DBServiceProvider extends ServiceProvider
     {
         protected $config = null;
@@ -20,12 +21,8 @@
         public function register()
         {
             $this->config = $this->loadConfig('database');
-
             $this->container->singleton(DBConnectionManagerInterface::class, DBConnectionManager::class);
             $this->container->alias(DBConnectionManagerInterface::class, 'DBManager');
-//
-//            $this->container->bind(PDOConnection::class);
-//            $this->container->alias(PDOConnection::class, 'DB.PDO');
         }
 
 
@@ -36,6 +33,7 @@
             // register the default, if any
             if ($default && $conf = $this->config['providers'][$default]) {
                 $connection = $db->create('default', $conf['engine'], $conf);
+
                 $this->container->instance(PDOConnection::class, $connection);
                 $this->container->instance(DBInterface::class, DB::class);
                 $this->container->alias(PDOConnection::class, 'DB.connections.default');
@@ -47,7 +45,8 @@
                         'DB.connections.' . $cName,
                         function ($container) use ($cName, $cConf) {
                             return $container->get('DBManager')->create($cName, $cConf['engine'], $cConf);
-                        });
+                        }
+                    );
                 }
             }
         }

@@ -10,6 +10,7 @@
     use Sourcegr\Framework\Base\Hashing\HashingManagerInterface;
     use Sourcegr\Framework\Base\ServiceProvider;
 
+
     class HashingServiceProvider extends ServiceProvider
     {
         public function register()
@@ -22,14 +23,16 @@
 
             // lazy register all providers to the container
             foreach ($config['providers'] as $hasherName => $hasherConfig) {
-                $this->container->singleton('HashProviders.' . $hasherName,
+                $this->container->singleton(
+                    'HashProviders.' . $hasherName,
                     function () use ($manager, $hasherName, $hasherConfig) {
                         return $manager->createHasher($hasherName, $hasherConfig);
-                    });
+                    }
+                );
 
                 $default = $config['default'] ?? null;
 
-                if (!$default || !$this->container->has('HashProviders.' . $default)){
+                if (!$default || !$this->container->has('HashProviders.' . $default)) {
                     throw new \Exception('HashingServiceProvider: The default hash engine does not exist');
                 }
 
