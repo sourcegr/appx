@@ -11,7 +11,9 @@
         ],
         "psr-4": {
             "App\\": "app/",
-            "Sourcegr\\Framework\\": "../lib/src/"
+            "Sourcegr\\Framework\\": "lib/src/",
+            "Sourcegr\\Tests\\":  "lib/Tests/",
+            "Sourcegr\\Stub\\": "lib/Stub/"
          }
     },
     "autoload-dev": {

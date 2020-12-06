@@ -11,23 +11,26 @@
 
 
     return function (RouteCollection $routeCollection) {
-        $routeCollection->GET('/',
-            function (ViewManager $viewManager, RequestInterface $request) {
-                return $viewManager->make('main')
-                    ->with('user', $request->user)
-                    ->with('token', $request->user['token']);
-            })
-            ->setMiddleware(NeedsLoginMiddleware::class)
-            ->matchesAll();
+        $routeCollection->GET('/', function (ViewManager $viewManager, RequestInterface $request) {
+            return $viewManager->make('main');
+        });
+
+        $routeCollection->GET('/secret', function (ViewManager $viewManager, RequestInterface $request) {
+            return $viewManager
+                ->make('secret')
+                ->with('user', $request->user);
+            }
+        )->setMiddleware(NeedsLoginMiddleware::class);
 
 
-        $routeCollection->GET('login', LoginController::class, 'login')
+        $routeCollection
+            ->GET('login', LoginController::class, 'login')
             ->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
 
-        $routeCollection->POST('login', LoginController::class, 'authenticate')
+        $routeCollection
+            ->POST('login', LoginController::class, 'authenticate')
             ->setMiddleware(RedirectIfAuthenticatedMiddleware::class);
 
-        $routeCollection->GET('logout', LoginController::class, 'logout');
-
-
+        $routeCollection
+            ->GET('logout', LoginController::class, 'logout');
     };

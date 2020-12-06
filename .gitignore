@@ -3,3 +3,4 @@
 /app/Models/
 .env
 /www/bundle/
+/www/router.php

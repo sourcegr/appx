@@ -30,12 +30,12 @@
             'postgres' => [
                 'active' => true,
                 'engine' => 'pgsql',
-                'host' => '127.0.0.1',
-                'user' => 'default',
-                'password' => 'secret',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'user' => env('DB_USER', 'root'),
+                'password' => env('DB_PASS', 'root'),
                 'port' => 5432,
                 'encoding' => env('DB_ENCODING', 'UTF8'),
-                'db' => 'test',
+                'db' => env('DB_DATABASE', 'test'),
                 'pdo_params' => [
                     PDO::ATTR_CASE => PDO::CASE_NATURAL,
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
