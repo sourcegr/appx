@@ -12,11 +12,6 @@
 
         protected $drivePath;
 
-        protected function getRealPath(string $directory = null): string
-        {
-            $dir = $directory !== null ? $this->drivePath . $directory : $this->drivePath;
-            return $dir . '/';
-        }
 
 
         public function __construct(string $drivePath)
@@ -26,6 +21,13 @@
             }
 
             $this->drivePath = $drivePath;
+        }
+
+
+        protected function getRealPath(string $directory = null): string
+        {
+            $dir = $directory !== null ? $this->drivePath . $directory : $this->drivePath;
+            return $dir . '/';
         }
 
 
