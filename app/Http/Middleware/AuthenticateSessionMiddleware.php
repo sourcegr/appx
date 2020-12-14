@@ -16,6 +16,7 @@
         public function handle(ResponseInterface $response, RequestInterface $r)
         {
             $r->user = $r->auth->user();
+
             return $response;
         }
     }

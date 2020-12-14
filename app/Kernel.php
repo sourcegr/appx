@@ -59,6 +59,7 @@
             $callback = $route->callback;
 
 
+
             try {
                 if (is_string($callback)) {
                     $handlerResult = $container->makeFromString($callback, $routeMatch->vars);

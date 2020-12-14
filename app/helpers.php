@@ -16,9 +16,9 @@
     function env($var, $default = null)
     {
 
-        $value = $_ENV[$var] ?? false;
+        $value = $_ENV[$var] ?? null;
 
-        if ($value === false) {
+        if ($value === false || $value === null) {
             return compileForValue($default);
         }
 

@@ -7,6 +7,8 @@
 
 
     use Sourcegr\Framework\Base\View\Renderable;
+    use Sourcegr\Framework\Database\BaseCollection;
+    use Sourcegr\Framework\Database\BaseModel;
     use Sourcegr\Framework\Http\Boom;
 
     class HttpResponse implements ResponseInterface
@@ -97,6 +99,13 @@
 
             if (is_array($content)) {
                 return json_encode($content, JSON_UNESCAPED_UNICODE);
+            }
+
+            if ($content instanceof BaseCollection) {
+                return json_encode($content->getData(), JSON_UNESCAPED_UNICODE);
+            }
+            if ($content instanceof BaseModel) {
+                return json_encode((array)$content->data, JSON_UNESCAPED_UNICODE);
             }
 
             if (is_string($content) || is_numeric($content)) {

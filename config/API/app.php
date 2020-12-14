@@ -4,24 +4,26 @@
 
     // API Realm configuration
 
+    use App\Http\Middleware\AuthenticateApi;
+    use App\Http\Middleware\CheckApiToken;
+    use App\ServiceProviders\AuthServiceProvider as AuthServiceProvider;
+    use App\ServiceProviders\DBServiceProvider as DBServiceProvider;
+    use App\ServiceProviders\FileSystemsProvider as FileSystemsProvider;
+    use App\ServiceProviders\HashingServiceProvider as HashingServiceProvider;
+    use App\ServiceProviders\RedisServiceProvider;
+
 
     return [
         'SERVICE_PROVIDERS' => [
-            \App\ServiceProviders\DBServiceProvider::class,
-            \App\ServiceProviders\HashingServiceProvider::class,
-//            \App\ServiceProviders\SessionServiceProvider::class,
-//            App\ServiceProviders\ViewServiceProvider::class,
-            \App\ServiceProviders\FileSystemsProvider::class,
-            \App\ServiceProviders\AuthServiceProvider::class
+            DBServiceProvider::class,
+            HashingServiceProvider::class,
+            FileSystemsProvider::class,
+            AuthServiceProvider::class,
+            RedisServiceProvider::class
         ],
 
         'MIDDLEWARE' => [
-//            App\Http\Middleware\StartSessionMiddleware::class,
-//            App\Http\Middleware\AuthenticateSessionMiddleware::class,
-            App\Http\Middleware\CheckApiToken::class,
-            App\Http\Middleware\AuthenticateApi::class,
-//            App\Http\Middleware\VerifyCSRFMiddleware::class,
-//            App\Http\Middleware\SendCookiesMiddleware::class,
-//            App\Http\Middleware\CreateFreshApiTokenMiddleware::class
+            CheckApiToken::class,
+            AuthenticateApi::class,
         ]
     ];
