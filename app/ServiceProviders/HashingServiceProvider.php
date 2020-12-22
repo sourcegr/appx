@@ -6,6 +6,7 @@
     namespace App\ServiceProviders;
 
 
+    use Sourcegr\Framework\Base\Hashing\Engine\HasherInterface;
     use Sourcegr\Framework\Base\Hashing\HashingManager;
     use Sourcegr\Framework\Base\Hashing\HashingManagerInterface;
     use Sourcegr\Framework\Base\ServiceProvider;
@@ -23,21 +24,22 @@
 
             // lazy register all providers to the container
             foreach ($config['providers'] as $hasherName => $hasherConfig) {
-                $this->container->singleton(
-                    'HashProviders.' . $hasherName,
-                    function () use ($manager, $hasherName, $hasherConfig) {
+                $this->container->singleton('HashProviders.' . $hasherName, function () use ($manager, $hasherName, $hasherConfig) {
                         return $manager->createHasher($hasherName, $hasherConfig);
                     }
                 );
-
-                $default = $config['default'] ?? null;
-
-                if (!$default || !$this->container->has('HashProviders.' . $default)) {
-                    throw new \Exception('HashingServiceProvider: The default hash engine does not exist');
-                }
-
-                $this->container->alias('HashProviders.' . $default, 'HashProviders.default');
             }
+
+            $default = $config['default'] ?? null;
+
+            if (!$default || !$this->container->has('HashProviders.' . $default)) {
+                throw new \Exception('HashingServiceProvider: The default hash engine does not exist');
+            }
+
+            $this->container->alias('HashProviders.' . $default, 'HashProviders.default');
+
+            $defaultHasher = $manager->createHasher($default, $config['providers'][$default]);
+            $this->container->instance(HasherInterface::class, $defaultHasher);
         }
 
         public function boot()

@@ -11,9 +11,37 @@
     {
         protected $data;
 
+
         public function __construct($data)
         {
             $this->data = $data;
+        }
+
+        public static function from($data) {
+            return new static($data);
+        }
+
+        public function makeTree($parentId=null, $leafName='children', $idCol='id', $parentIdCol='parent_id')
+        {
+            $nodes = static::filterCollectionByKey('parent_id', $parentId);
+
+
+            foreach ($nodes as $key=>$node) {
+                $nodes[$key][$leafName] = static::makeTree($node[$idCol], $leafName, $idCol, $parentIdCol);
+            }
+            return $nodes;
+        }
+
+
+        public function filterCollectionByKey($key, $value)
+        {
+            $result = [];
+            foreach ($this->data as $row) {
+                if ($row[$key] == $value) {
+                    $result[] = $row;
+                }
+            }
+            return $result;
         }
 
 
@@ -39,6 +67,13 @@
             }
             return $gathered;
         }
+
+
+
+
+
+
+
 
 
 
@@ -68,6 +103,7 @@
         {
             unset($this->data[$offset]);
         }
+
 
         public function getData()
         {

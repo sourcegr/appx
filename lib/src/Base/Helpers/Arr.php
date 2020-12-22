@@ -1,6 +1,5 @@
 <?php
 
-
     namespace Sourcegr\Framework\Base\Helpers;
 
 
@@ -10,6 +9,7 @@
         {
             return static::is($var) ? $var : [$var];
         }
+
 
         public static function getPureArray($var)
         {
@@ -24,20 +24,24 @@
             return null;
         }
 
+
         public static function is($var)
         {
             return (\is_array($var) || $var instanceof \ArrayObject);
         }
+
 
         public static function isArray($var)
         {
             return \is_array($var);
         }
 
+
         public static function isArrayObject($var)
         {
             return $var instanceof \ArrayObject;
         }
+
 
         public static function keys($var)
         {
@@ -52,6 +56,7 @@
             return null;
         }
 
+
         public static function values($var)
         {
             if (static::isArray($var)) {
@@ -64,6 +69,7 @@
 
             return null;
         }
+
 
         public static function arrayReplace($init, $with)
         {
@@ -90,6 +96,7 @@
             }
         }
 
+
         public static function merge()
         {
             $all = func_get_args();
@@ -103,8 +110,15 @@
             return array_merge(...$all);
         }
 
+
         public static function last(array $arr)
         {
             return end($arr);
+        }
+
+
+        public static function uniq($arr)
+        {
+            return array_keys(array_flip($arr));
         }
     }

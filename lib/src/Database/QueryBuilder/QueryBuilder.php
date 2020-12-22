@@ -305,6 +305,10 @@
         }
 
 
+        /*
+         * actual queries
+         */
+
         public function max($col)
         {
             return $this->select("MAX($col) as max")[0]['max'] ?? false;
@@ -345,6 +349,14 @@
         }
 
 
+
+        /*
+         * resets the query to be reused
+         */
+        private function resetQuery() {
+            $this->cols('*');
+        }
+
         public function select($fields = null)
         {
             if ($fields !== null) {
@@ -355,7 +367,9 @@
             if ($this->debug) {
                 dd($sql, $params);
             }
-            return $this->grammar->select($sql, $params);
+            $result = $this->grammar->select($sql, $params);
+            $this->resetQuery();
+            return $result;
         }
 
         public function update()
@@ -378,6 +392,7 @@
             }
 
             if (count($updateDefinition) == 0) {
+                $this->resetQuery();
                 return 0;
             }
 
@@ -418,7 +433,10 @@
             if ($this->debug) {
                 dd($sql, $this->sqlParams);
             }
-            return $this->grammar->update($sql, $this->sqlParams, $this->returning);
+
+            $result = $this->grammar->update($sql, $this->sqlParams, $this->returning);
+            $this->resetQuery();
+            return $result;
         }
 
         public function insert($insertDefinition = null)
@@ -456,7 +474,9 @@
             if ($this->debug) {
                 dd($sql, $this->sqlParams);
             }
-            return $this->grammar->insert($sql, $this->sqlParams, $this->returning);
+            $result = $this->grammar->insert($sql, $this->sqlParams, $this->returning);
+            $this->resetQuery();
+            return $result;
         }
 
         public function delete()
@@ -475,7 +495,10 @@
             if ($this->debug) {
                 dd($sql, $this->sqlParams);
             }
-            return $this->grammar->delete($sql, $this->sqlParams, $this->returning);
+
+            $result = $this->grammar->delete($sql, $this->sqlParams, $this->returning);
+            $this->resetQuery();
+            return $result;
         }
 
 

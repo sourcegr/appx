@@ -4,7 +4,6 @@
     namespace Sourcegr\Framework\Database;
 
 
-    use App\Models\ScheduledTaskEntity;
     use Exception;
     use Sourcegr\Framework\Database\QueryBuilder\DB;
     use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
@@ -27,7 +26,6 @@
         protected static bool $updatedAt = false;
         public int $id = 0;
         public $data;
-        protected $user = null;
 
         /**
          * @var DB $DB
@@ -43,8 +41,6 @@
          */
         public function __construct($id = 0)
         {
-            $request = app()->container->make(RequestInterface::class);
-            $this->user = $request->user;
             $this->data = new StdClass();
             $this->setId(+$id);
         }
@@ -110,7 +106,7 @@
         /**
          * @param int|string $id id to retrieve
          * @param array|null $fieldsToLoad Fields to load. If it is not provided, loads all fields
-         * @return static|null The model instance
+         * @return static The model instance
          * @throws BoomException if the model is not found
          * @throws \ReflectionException
          * @throws \Sourcegr\Framework\App\Container\BindingResolutionException
@@ -120,7 +116,7 @@
             $res = static::find(+$id, $fieldsToLoad);
 
             if ($res == null) {
-                throw new BoomException(new Boom(HTTPResponseCode::HTTP_NOT_FOUND, "Item $id not found in table " . static::$table));
+                throw BoomException::Http(HTTPResponseCode::HTTP_NOT_FOUND);
             }
             return $res;
         }
@@ -162,7 +158,7 @@
             }
 
             if (static::$createdBy) {
-                $dataToUpdate['created_by'] = $this->user['id'];
+                $dataToUpdate['created_by'] = $this->getCurrentUserId();
             }
 
             $id = $this->QB()->insert($dataToUpdate);
@@ -192,7 +188,7 @@
             }
 
             if (static::$updatedBy) {
-                $data['updated_by'] = $this->user['id'];
+                $data['updated_by'] = $this->getCurrentUserId();
             }
 
             $this->QB()->where('id', $this->id)->update($data);
@@ -276,6 +272,17 @@
          *
          */
 
+
+        protected function getCurrentUserId() {
+            $r = app()->container->make(RequestInterface::class);
+            $u = $r->user ?? null;
+
+            if ($u) {
+                return $u['id'];
+            } else {
+                return 0;
+            }
+        }
         /**
          * sets the ID for the model
          * @internal
@@ -303,9 +310,6 @@
             $id = +$this->id;
             $res = $this->QB()->where('id', $id)->first($fields);
 
-//            if (get_class($this) == ScheduledTaskEntity::class) {
-//                dd($res);
-//            }
             if ($res == null) {
                 return null;
             }
@@ -369,9 +373,6 @@
                 $data = (object)$data;
             }
 
-//            if (get_class($this) == ScheduledTaskEntity::class) {
-//                dd($data);
-//            }
             foreach (static::$jsonColumns as $col) {
                 if (property_exists($data, $col)) {
                     $data->$col = json_decode($data->$col);

@@ -2,16 +2,15 @@
 
     declare(strict_types=1);
 
-
     namespace Sourcegr\Framework\App;
 
 
     use Sourcegr\Framework\Base\ServiceProviderInterface;
-    use Sourcegr\Framework\Base\View\Renderable;
     use Sourcegr\Framework\Http\Boom;
     use Sourcegr\Framework\Http\Redirect\Redirect;
     use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\ResponseInterface;
+
 
     class App implements AppInterface
     {
@@ -19,17 +18,14 @@
          * @var array $serviceProviders holds the instances of the service providers
          */
         protected $serviceProviders = [];
-
         /**
          * @var array $loadedProviders holds classNames for loaded service providers
          */
         protected $loadedProviders = [];
-
         /**
          * @var array $bootedProviders holds BOOTED service provider instances
          */
         protected $bootedProviders = [];
-
         /**
          * @var RequestInterface
          */
@@ -38,31 +34,22 @@
          * @var array $bootedMiddleware holds BOOTED middleware instances
          */
         protected $bootedMiddleware = [];
-
-
         /**
          * @var array $shutDownCallbacks holds callbacks to call after the route has been parsed
          */
         protected $shutDownCallbacks = [];
-
         /**
          * @var RequestInterface $request
          */
         public $request;
-
-
         /**
          * @var ResponseInterface $response
          */
         public $response;
-
-
         /**
          * @var ContainerInterface the container instance
          */
         public $container;
-
-
         /**
          * @var mixed
          */
@@ -118,13 +105,10 @@
         }
 
 
-
-
-
-        public function middlewareBooted($middleware) {
+        public function middlewareBooted($middleware)
+        {
             return in_array($middleware, $this->bootedMiddleware);
         }
-
 
 
         public function getShutDownCallbacks(): array
@@ -138,6 +122,7 @@
             $this->container = new Container($this);
         }
 
+
         public function isDownForMaintenance()
         {
             return false;
@@ -147,6 +132,16 @@
         public function loadAppConfig($key)
         {
             return $this->loadConfig('app', $key);
+        }
+
+
+        public function loadConfigIfExists($file, $key = null)
+        {
+            if (file_exists($this->getPath('CONFIG') . "$file.php")) {
+                return $this->loadConfig($file, $key);
+            }
+
+            return null;
         }
 
 
@@ -192,6 +187,7 @@
             }
         }
 
+
         public function prepareForShutdown()
         {
             foreach ($this->getShutDownCallbacks() as $callback) {
@@ -199,31 +195,29 @@
             }
         }
 
+
         public function shutDown()
         {
-//            header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + (7 * 24 * 60 * 60))); // 1 week
-//            header("Cache-Control: no-cache");
-//            header("Pragma: no-cache");
-
+            //            header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + (7 * 24 * 60 * 60))); // 1 week
+            //            header("Cache-Control: no-cache");
+            //            header("Pragma: no-cache");
 
             $response = $this->response->makeResponse();
-//            dd("I DIE!", $response);
+            //            dd("I DIE!", $response);
 
             http_response_code($this->response->statusCode);
 
             foreach ($this->response->headers as $headerName => $headerValue) {
-
                 header("$headerName: $headerValue");
             }
-//dd($this->request->session->getToken());
-
+            //dd($this->request->session->getToken());
 
             if ($response instanceof Redirect) {
                 die();
             }
 
             if ($response instanceof Boom) {
-//                dd('will shut now');
+                //                dd('will shut now');
                 if ($this->request->expectsJson()) {
                     die(json_encode($response, JSON_UNESCAPED_UNICODE));
                 }

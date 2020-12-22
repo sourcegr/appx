@@ -58,7 +58,7 @@
 
         public function getFlash()
         {
-            return $this->headers->get();
+            return $this->flash->get();
         }
 
 
