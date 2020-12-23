@@ -8,7 +8,6 @@
     use Sourcegr\Framework\Database\QueryBuilder\DB;
     use Sourcegr\Framework\Database\QueryBuilder\QueryBuilder;
     use Sourcegr\Framework\Database\QueryBuilder\Raw;
-    use Sourcegr\Framework\Http\Boom;
     use Sourcegr\Framework\Http\BoomException;
     use Sourcegr\Framework\Http\Request\RequestInterface;
     use Sourcegr\Framework\Http\Response\HTTPResponseCode;
@@ -17,7 +16,7 @@
 
     class BaseModel
     {
-        protected static array $jsonColumns = [];
+        protected static array $typeCasts = [];
         protected static string $table = 'UNINITIALIZED';
         protected static string $idField = 'id';
         protected static bool $softDeletes = false;
@@ -26,12 +25,14 @@
         protected static bool $updatedAt = false;
         public int $id = 0;
         public $data;
-
         /**
          * @var DB $DB
          */
         protected $DB;
 
+        public function getTableName() {
+            return $this::$table;
+        }
 
         /**
          * BaseModel constructor.
@@ -69,9 +70,6 @@
         {
             $qb = static::getQueryBuilder();
 
-            if (static::$softDeletes) {
-                $qb->whereNull('deleted_at');
-            }
             if ($whereClause) {
                 $qb->where($whereClause);
             }
@@ -130,7 +128,11 @@
         public static function getQueryBuilder()
         {
             $db = app()->container->make(DB::class);
-            return $db->Table(static::$table);
+            $q = $db->Table(static::$table);
+            if (static::$softDeletes) {
+                $q->wrapIn('deleted_at IS NULL');
+            }
+            return $q;
         }
 
 
@@ -168,19 +170,27 @@
 
 
         /**
-         * updates the DB with the given or provided data
-         * @param object|null $dataToUpdate data to update. If null, the model's data are used
+         * updates the DB with the  provided data, or with the models data
+         *
+         * @param ?array $dataToUpdate if provided, ti must be a ready to be inserted key=>value array
          * @return static
+         * @throws QueryBuilder\Exceptions\UpdateErrorException
          * @throws \ReflectionException
          * @throws \Sourcegr\Framework\App\Container\BindingResolutionException
-         * @throws \Sourcegr\Framework\Database\QueryBuilder\Exceptions\UpdateErrorException
          */
         public function update($dataToUpdate = null)
         {
-            $data = $dataToUpdate === null ? $this->data : $dataToUpdate;
+            if ($dataToUpdate) {
+                if (!is_array($dataToUpdate)) {
+                    throw new Exception('Provided data should be an associated array ready to be inserted int the DB');
+                }
 
+                $this->hydrateModelWith($dataToUpdate);
+            }
+
+            $data = $this->data;
             unset($data->id);
-            // prepare data for DB
+
             $data = $this->convertModelObjectDataToArray($data);
 
             if (static::$updatedAt) {
@@ -194,7 +204,7 @@
             $this->QB()->where('id', $this->id)->update($data);
             $this->setId($this->id);
 
-            return $this->mergeArrayDataToModel($data);
+            return $this;
         }
 
 
@@ -250,6 +260,70 @@
         }
 
 
+        /**
+         * returns an array that contains only the $columnsToGet columns
+         *
+         * @param string|array $columnsToGet string with comma separated keys, or an array with the keys
+         * @return array
+         */
+        public function filterData($columnsToGet)
+        {
+            if (!is_array($columnsToGet)) {
+                $columnsToGet = explode(',', str_replace(' ', '', $columnsToGet));
+            }
+
+            $o = [];
+            foreach ($columnsToGet as $key) {
+                if ($v = $this->data->$key) {
+                    $o[$key] = $v;
+                }
+            }
+            return $o;
+        }
+
+
+        /**
+         * hydrates the data property of the model with provided values, ensuring all castings are performed
+         *
+         * @param array $input
+         * @return static
+         * @throws Exception
+         */
+        public function hydrateModelWith(array $input)
+        {
+            if (defined('static::ALL_FIELDS')) {
+                foreach (static::ALL_FIELDS as $field) {
+                    $cast = static::$typeCasts[$field] ?? null;
+
+                    if (!array_key_exists($field, $input)) {
+                        continue;
+                    }
+
+                    if ($cast == null) {
+                        $this->data->$field = $input[$field];
+                    } else {
+                        $this->data->$field = $this->castTo($cast, $input[$field]);
+                    }
+                }
+                return $this;
+            }
+
+            foreach ($input as $field => $value) {
+                if ($field == static::$idField) {
+                    continue;
+                }
+
+                $cast = static::$typeCasts[$field] ?? null;
+                if ($cast == null) {
+                    $this->data->$field = $value;
+                }else{
+                    $this->data->$field = $this->castTo($field, $value);
+                }
+            }
+            return $this;
+        }
+
+
         /*
          *
          *
@@ -272,23 +346,25 @@
          *
          */
 
-
-        protected function getCurrentUserId() {
+        protected function getCurrentUserId()
+        {
             $r = app()->container->make(RequestInterface::class);
             $u = $r->user ?? null;
 
             if ($u) {
-                return $u['id'];
+                return $u->id;
             } else {
                 return 0;
             }
         }
+
+
         /**
          * sets the ID for the model
-         * @internal
-         *
          * @param $id
          * @return $this
+         * @internal
+         *
          */
         protected function setId($id)
         {
@@ -308,7 +384,9 @@
         protected function load($fields = '*')
         {
             $id = +$this->id;
-            $res = $this->QB()->where('id', $id)->first($fields);
+            $q = $this->QB()->where('id', $id);
+
+            $res = $q->first($fields);
 
             if ($res == null) {
                 return null;
@@ -322,17 +400,20 @@
 
 
         /**
-         * @deprecated
          * @return array
+         * @deprecated
          */
         protected function getDataForDB()
         {
             $data = (array)$this->data;
 
-            foreach (static::$jsonColumns as $col) {
-                if (array_key_exists($col, $data)) {
-                    $data[$col] = json_encode($data[$col], JSON_UNESCAPED_UNICODE);
+            foreach ($data as $field => $value) {
+                $cast = static::$typeCasts[$field] ?? null;
+                if ($cast === null) {
+                    continue;
                 }
+
+                $data[$field] = $this->castForDB($cast, $value);
             }
 
             return $data;
@@ -352,10 +433,12 @@
             }
             $data = (array)$data;
 
-            foreach (static::$jsonColumns as $col) {
-                if (array_key_exists($col, $data)) {
-                    $data[$col] = json_encode($data[$col], JSON_UNESCAPED_UNICODE);
+            foreach ($data as $field => $value) {
+                $cast = static::$typeCasts[$field] ?? null;
+                if ($cast === null) {
+                    continue;
                 }
+                $data[$field] = $this->castForDB($cast, $value);
             }
 
             return $data;
@@ -369,16 +452,84 @@
          */
         protected function convertArrayDataToModelObjectData($data)
         {
-            if (is_array($data)) {
-                $data = (object)$data;
+            if (is_object($data)) {
+                $data = (array)$data;
+            }
+            if (!is_array($data)) {
+                throw new Exception("convertArrayDataToModelObjectData accepts an Array or an Object. " . get_class($this));
+            }
+            $returning = new StdClass();
+
+            foreach ($data as $field => $value) {
+                $cast = static::$typeCasts[$field] ?? null;
+
+                $returning->$field = $cast !== null ?
+                    $this->castTo($cast, $value) :
+                    $value;
             }
 
-            foreach (static::$jsonColumns as $col) {
-                if (property_exists($data, $col)) {
-                    $data->$col = json_decode($data->$col);
-                }
+            return $returning;
+        }
+
+
+        protected function castTo(string $castType, $value)
+        {
+            if ($castType === 'json') {
+                return json_decode($value);
             }
-            return $data;
+            if ($castType === 'number') {
+                $value = "0$value";
+                return (int)$value;
+            }
+
+            if ($castType === 'string') {
+                return (string)$value;
+            }
+
+            if ($castType === 'boolean') {
+                if ($value == 1 || $value === true || $value === "true" || $value === 't') {
+                    return true;
+                }
+                if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
+                    return false;
+                }
+                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . get_class($this) . '::castTo');
+            }
+
+            throw new Exception('Unknown cast: ' . $castType . ' in ' . get_class($this) . '::castTo');
+        }
+
+
+        protected function castForDB(string $castType, $value)
+        {
+            if ($castType === 'json') {
+                return json_encode($value, JSON_UNESCAPED_UNICODE);
+            }
+
+            if ($castType === 'number') {
+                if ($value == '') {
+                    return null;
+                }
+
+                $value = "0$value";
+                return (int)$value;
+            }
+
+            if ($castType === 'string') {
+                return (string)$value;
+            }
+
+            if ($castType === 'boolean') {
+                if ($value == 1 || $value === true || $value === "true" || $value === 't') {
+                    return SQL_TRUE;
+                }
+                if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
+                    return SQL_FALSE;
+                }
+                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . get_class($this) . '::castForDB');
+            }
+
+            throw new Exception('Unknown cast: ' . $castType . ' in ' . get_class($this) . '::castForDB');
         }
 
 
