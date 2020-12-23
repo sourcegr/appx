@@ -2,7 +2,6 @@
 
     declare(strict_types=1);
 
-
     namespace Sourcegr\Framework\Database\QueryBuilder;
 
 
@@ -10,29 +9,46 @@
     use Sourcegr\Framework\Database\GrammarInterface;
     use Sourcegr\Framework\Database\QueryBuilder\Exceptions\UpdateErrorException;
 
+
     class QueryBuilder
     {
         private bool $debug = false;
         private string $table;
         private $params;
-
         private $cols = '*';
         private bool $selectAll = true;
         private array $wheres = [];
-
         private $orderBy = null;
-
         private int $rowCountStartAt = 0;
         private $rowCountLimit = null;
-
         private array $joins = [];
         private $groupBy = null;
         private $having = null;
-
         private array $sqlParams = [];
-
+        /**
+         * to wrap all clauses to something like
+         * where deleted_at is null and (.......)
+         * @var null
+         */
+        private $wrap = null;
         private GrammarInterface $grammar;
         private $returning = null;
+
+        protected function wrapWheres($whereStr) {
+            if ($this->wrap !== null && strlen($whereStr) > 1) {
+                $whereStr = $this->wrap . "($whereStr)";
+            }
+            return $whereStr;
+        }
+
+
+        public function wrapIn($clause)
+        {
+            $this->wrap = $clause;
+        }
+        public function clearWrap() {
+            $this->wrap = null;
+        }
 
 
         public function __construct(GrammarInterface $grammar, string $table)
@@ -42,10 +58,13 @@
             $this->params = new Params($this);
         }
 
-        public function setDebug($debug = true){
+
+        public function setDebug($debug = true)
+        {
             $this->debug = $debug;
             return $this;
         }
+
 
         public function setGrammar($grammar)
         {
@@ -53,10 +72,12 @@
             return $this;
         }
 
+
         public function getGrammar()
         {
             return $this->grammar;
         }
+
 
         public function getTable()
         {
@@ -69,6 +90,7 @@
             $args = func_get_args();
             return $this->columns(...$args);
         }
+
 
         public function returning()
         {
@@ -98,7 +120,6 @@
                     return $this;
                 }
 
-
                 $this->returning = array_map('trim', explode(',', $returning));
                 return $this;
             }
@@ -106,6 +127,7 @@
             $this->returning = $args;
             return $this;
         }
+
 
         public function columns()
         {
@@ -138,7 +160,6 @@
                     return $this;
                 }
 
-
                 $this->cols = array_map('trim', explode(',', $cols));
                 return $this;
             }
@@ -146,11 +167,13 @@
             return $this;
         }
 
+
         public function offset($rowsToSkip)
         {
             $this->rowCountStartAt = $rowsToSkip;
             return $this;
         }
+
 
         public function limit($rowCount)
         {
@@ -158,17 +181,20 @@
             return $this;
         }
 
+
         public function orderBy($orderDefinition)
         {
             $this->orderBy = $orderDefinition;
             return $this;
         }
 
+
         public function groupBy($groupByDefinition)
         {
             $this->groupBy = $groupByDefinition;
             return $this;
         }
+
 
         public function having()
         {
@@ -193,65 +219,78 @@
             return $this->W('AND', $col, $mod, $val);
         }
 
+
         public function orWhere($col, $mod = null, $val = null)
         {
             return $this->W('OR', $col, $mod, $val);
         }
+
 
         public function whereIn($col, $arr = [])
         {
             return $this->W('AND', $col, 'IN', $arr);
         }
 
+
         public function orWhereIn($col, $arr = [])
         {
             return $this->W('OR', $col, 'IN', $arr);
         }
+
 
         public function whereLike($col, $arr = [])
         {
             return $this->W('AND', $col, 'LIKE', $arr);
         }
 
+
         public function orWhereLike($col, $arr = [])
         {
             return $this->W('OR', $col, 'LIKE', $arr);
         }
+
 
         public function whereNotLike($col, $arr = [])
         {
             return $this->W('AND', $col, 'NOT LIKE', $arr);
         }
 
+
         public function orWhereNotLike($col, $arr = [])
         {
             return $this->W('OR', $col, 'NOT LIKE', $arr);
         }
+
 
         public function whereNotIn($col, $arr = [])
         {
             return $this->W('AND', $col, 'NOT IN', $arr);
         }
 
+
         public function orWhereNotIn($col, $arr = [])
         {
             return $this->W('OR', $col, 'NOT IN', $arr);
         }
+
 
         public function whereNull($col)
         {
             return $this->W('AND', $col, null, 'IS NULL');
         }
 
+
         public function orWhereNull($col)
         {
             return $this->W('OR', $col, null, 'IS NULL');
         }
 
+
         public function whereNotNull($col)
         {
             return $this->W('AND', $col, null, 'IS NOT NULL');
         }
+
 
         public function orWhereNotNull($col)
         {
@@ -265,11 +304,13 @@
             return $this;
         }
 
+
         public function leftJoin($table, $joinText)
         {
             $this->joins[] = "LEFT JOIN $table ON $joinText";
             return $this;
         }
+
 
         public function rightJoin($table, $joinText)
         {
@@ -277,10 +318,12 @@
             return $this;
         }
 
+
         public function createSQLLimit()
         {
             return $this->grammar->createLimit($this->rowCountLimit, $this->rowCountStartAt);
         }
+
 
         public function createSelect()
         {
@@ -288,6 +331,8 @@
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
+            $this->wrapWheres($whereString);
+
             array_push($this->sqlParams, ...$whereParams);
 
             $notNullAdder->addNotNull('SELECT',
@@ -314,10 +359,12 @@
             return $this->select("MAX($col) as max")[0]['max'] ?? false;
         }
 
+
         public function min($col)
         {
             return $this->select("MIN($col) AS min")[0]['min'] ?? false;
         }
+
 
         public function groupCount($groupCol)
         {
@@ -329,15 +376,18 @@
             return $final;
         }
 
+
         public function count()
         {
             return $this->select("COUNT(*) AS count")[0]['count'] ?? false;
         }
 
+
         public function find($id, $idName = 'id')
         {
             return $this->where($idName, $id)->first();
         }
+
 
         public function first($fields = null)
         {
@@ -349,13 +399,14 @@
         }
 
 
-
         /*
          * resets the query to be reused
          */
-        private function resetQuery() {
+        private function resetQuery()
+        {
             $this->cols('*');
         }
+
 
         public function select($fields = null)
         {
@@ -371,6 +422,7 @@
             $this->resetQuery();
             return $result;
         }
+
 
         public function update()
         {
@@ -422,6 +474,8 @@
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
+            $this->wrapWheres($whereString);
+
             array_push($this->sqlParams, ...$whereParams);
             $notNullAdder->addNotNull('UPDATE',
                 $this->table,
@@ -438,6 +492,7 @@
             $this->resetQuery();
             return $result;
         }
+
 
         public function insert($insertDefinition = null)
         {
@@ -479,12 +534,15 @@
             return $result;
         }
 
+
         public function delete()
         {
             $this->sqlParams = [];
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
+            $this->wrapWheres($whereString);
+
             array_push($this->sqlParams, ...$whereParams);
 
             $notNullAdder->addNotNull('DELETE FROM',
@@ -515,6 +573,7 @@
             $this->params->parse_input_clause($term, $col, $mod, $val);
             return $this;
         }
+
 
         public function getCols()
         {
