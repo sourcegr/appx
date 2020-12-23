@@ -18,11 +18,9 @@
 
         public function createHash(string $value, array $options = []): string
         {
-            $hash = password_hash($value,
-                PASSWORD_BCRYPT,
-                [
-                    'cost' => $options['rounds'] ?? $this->rounds
-                ]);
+            $hash = password_hash($value, PASSWORD_BCRYPT, [
+                'cost' => $options['rounds'] ?? $this->rounds
+            ]);
 
             if ($hash === false) {
                 throw new \Exception('BcryptHasher: cannot create hash. Maybe bcrypt hashing is not supported.');
