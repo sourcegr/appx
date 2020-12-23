@@ -118,4 +118,13 @@
         {
             return new \ArrayIterator($this->parameters);
         }
+        public function only(array $keys) {
+            $toret = [];
+            foreach ($this->parameters as $key=>$parameter) {
+                if (in_array($key, $keys)) {
+                    $toret[$key] = $parameter;
+                }
+            }
+            return $toret;
+        }
     }
