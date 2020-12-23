@@ -6,6 +6,9 @@
     namespace Sourcegr\Framework\Http\Request;
 
 
+    use Sourcegr\Framework\Base\ParameterBag;
+
+
     interface RequestInterface
     {
         public function setRealm(string $realm): RequestInterface;
@@ -29,6 +32,10 @@
         public function get(string $key, string $type = null): ?string;
 
         public function files();
+
+        public function allPOST(): ParameterBag;
+
+        public function allGET(): ParameterBag;
 
         public function persistSession();
 

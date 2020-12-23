@@ -178,11 +178,11 @@
             return $this->varsBag;
         }
 
-        public function allGET()
+        public function allGET(): ParameterBag
         {
             return $this->all()['GET'];
         }
-        public function allPOST()
+        public function allPOST(): ParameterBag
         {
             return $this->all()['POST'];
         }
