@@ -27,12 +27,28 @@
         public function parse_input_clause($term, $col, $mod, $val)
         {
             if (is_array($col)) {
-                foreach ($col as $key => $value) {
-                    if (is_numeric($key)) {
-                        $this->add_data('AND', $value, null, 'IS NOT NULL');
-                    } else {
-                        $this->add_data($term, $key, '=', $value);
+                if (QBHelpers::isAssocArray($col)) {
+                    foreach ($col as $fname => $fvalue) {
+                        $this->add_data($term, $fname, '=', $fvalue);
                     }
+                    return $this;
+                }
+
+                // where(['id' , 3])
+                if (count($col) == 1) {
+                    $this->add_data($term, $col[0], null, 'IS NOT NULL');
+                    return $this;
+                }
+
+                if (count($col) == 2) {
+                    $this->add_data($term, $col[0], '=', $col[1]);
+                    return $this;
+                }
+
+                // where(['id', '=', 3])
+                if (count($col) == 3) {
+                    $this->add_data($term, $col[0], $col[1], $col[2]);
+                    return $this;
                 }
                 return $this;
             }
