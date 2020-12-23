@@ -39,7 +39,6 @@
         public function encrypt($value, $serialize = true)
         {
             $iv = random_bytes(openssl_cipher_iv_length($this->cipher));
-
             $value = \openssl_encrypt($serialize ? serialize($value) : $value,
                 $this->cipher,
                 $this->key,
