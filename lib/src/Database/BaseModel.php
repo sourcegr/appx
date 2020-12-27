@@ -18,7 +18,8 @@
     {
         protected static array $typeCasts = [];
         protected static string $table = 'UNINITIALIZED';
-        protected static string $idField = 'id';
+        public static string $idField = 'id';
+        protected static string $orderCol = 'id';
         protected static bool $softDeletes = false;
         protected static bool $createdBy = false;
         protected static bool $updatedBy = false;
@@ -125,10 +126,10 @@
          * @throws \ReflectionException
          * @throws \Sourcegr\Framework\App\Container\BindingResolutionException
          */
-        public static function getQueryBuilder()
+        public static function getQueryBuilder($as = null)
         {
             $db = app()->container->make(DB::class);
-            $q = $db->Table(static::$table);
+            $q = $db->Table(static::$table. ($as ? " as $as": ''));
             if (static::$softDeletes) {
                 $q->wrapIn('deleted_at IS NULL');
             }
@@ -363,7 +364,6 @@
          * sets the ID for the model
          * @param $id
          * @return $this
-         * @internal
          *
          */
         protected function setId($id)
