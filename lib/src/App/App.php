@@ -217,10 +217,10 @@
             }
 
             if ($response instanceof Boom) {
-                //                dd('will shut now');
                 if ($this->request->expectsJson()) {
                     die(json_encode($response, JSON_UNESCAPED_UNICODE));
                 }
+
                 die($response->message);
             }
 

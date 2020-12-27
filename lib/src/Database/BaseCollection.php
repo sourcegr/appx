@@ -23,7 +23,7 @@
 
         public function makeTree($parentId=null, $leafName='children', $idCol='id', $parentIdCol='parent_id')
         {
-            $nodes = static::filterCollectionByKey('parent_id', $parentId);
+            $nodes = static::filterCollectionByKey($parentIdCol, $parentId);
 
 
             foreach ($nodes as $key=>$node) {
@@ -54,6 +54,15 @@
             }
             return $gathered;
         }
+        public function keyByAndGather($keyToKeyBy, $keyToGet)
+        {
+            $gathered = [];
+            foreach ($this->data as $item) {
+                $gathered[$item[$keyToKeyBy]] = $item[$keyToGet] ?? null;
+            }
+            return $gathered;
+        }
+
 
 
         public function keyBy($key)

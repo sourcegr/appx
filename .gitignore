@@ -4,3 +4,4 @@
 .env
 /www/bundle/
 /www/router.php
+/lib/tests/Store/RedisTest.php
