@@ -37,6 +37,8 @@
 
         public function allGET(): ParameterBag;
 
+        public function payload(): ?ParameterBag;
+
         public function persistSession();
 
         public function flash(string $name, $value);
