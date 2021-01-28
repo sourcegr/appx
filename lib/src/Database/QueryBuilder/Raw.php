@@ -19,6 +19,12 @@
             return new static('CURRENT_TIMESTAMP');
         }
 
+        public static function from($rawString)
+        {
+            return new static($rawString);
+        }
+
+
 
         public function getValue()
         {

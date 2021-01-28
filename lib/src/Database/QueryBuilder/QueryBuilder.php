@@ -35,9 +35,11 @@
         private $returning = null;
 
         protected function wrapWheres($whereStr) {
+
             if ($this->wrap !== null && strlen($whereStr) > 1) {
-                $whereStr = $this->wrap . "($whereStr)";
+                $whereStr = 'WHERE '.$this->wrap . ' AND ('.preg_replace('/^WHERE /', '', $whereStr).')';
             }
+
             return $whereStr;
         }
 
@@ -331,7 +333,7 @@
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
-            $this->wrapWheres($whereString);
+            $whereString = $this->wrapWheres($whereString);
 
             array_push($this->sqlParams, ...$whereParams);
 
@@ -474,7 +476,7 @@
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
-            $this->wrapWheres($whereString);
+            $whereString = $this->wrapWheres($whereString);
 
             array_push($this->sqlParams, ...$whereParams);
             $notNullAdder->addNotNull('UPDATE',
@@ -541,7 +543,7 @@
             $notNullAdder = new NotNullAdder();
 
             [$whereParams, $whereString] = $this->params->createSQLWhere();
-            $this->wrapWheres($whereString);
+            $whereString = $this->wrapWheres($whereString);
 
             array_push($this->sqlParams, ...$whereParams);
 

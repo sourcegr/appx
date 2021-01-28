@@ -11,7 +11,7 @@
     use Sourcegr\Framework\Database\QueryBuilder\DBInterface;
     use Sourcegr\Framework\Http\Session\SessionBag;
 
-    class DBAuthUserProvider extends BaseAuthUserProvider implements AuthUserProviderInterface
+    class DbAuthUserProvider extends BaseAuthUserProvider implements AuthUserProviderInterface
     {
         protected $table;
 

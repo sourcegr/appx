@@ -148,7 +148,7 @@
          */
         public function save($force = null)
         {
-            $dataToUpdate = $this->convertModelObjectDataToArray();
+            $dataToUpdate = static::convertModelObjectDataToArray($this->data);
 
             // prevent 0s as IDs
             if (isset($dataToUpdate['id']) && $dataToUpdate['id'] == 0) {
@@ -192,7 +192,7 @@
             $data = $this->data;
             unset($data->id);
 
-            $data = $this->convertModelObjectDataToArray($data);
+            $data = static::convertModelObjectDataToArray($data);
 
             if (static::$updatedAt) {
                 $data['updated_at'] = Raw::now();
@@ -202,6 +202,7 @@
                 $data['updated_by'] = $this->getCurrentUserId();
             }
 
+//            dd($data);
             $this->QB()->where('id', $this->id)->update($data);
             $this->setId($this->id);
 
@@ -413,7 +414,7 @@
                     continue;
                 }
 
-                $data[$field] = $this->castForDB($cast, $value);
+                $data[$field] = static::castForDB($cast, $value);
             }
 
             return $data;
@@ -423,14 +424,12 @@
         /**
          * converts the given object (or the objects data) to array for DB insertion
          *
-         * @param object | null $data
+         * @param object | array | null $data
          * @return array
+         * @throws Exception
          */
-        protected function convertModelObjectDataToArray($data = null)
+        public static function convertModelObjectDataToArray($data)
         {
-            if ($data === null) {
-                $data = $this->data;
-            }
             $data = (array)$data;
 
             foreach ($data as $field => $value) {
@@ -438,7 +437,7 @@
                 if ($cast === null) {
                     continue;
                 }
-                $data[$field] = $this->castForDB($cast, $value);
+                $data[$field] = static::castForDB($cast, $value);
             }
 
             return $data;
@@ -474,34 +473,46 @@
 
         protected function castTo(string $castType, $value)
         {
-            if ($castType === 'json') {
-                return json_decode($value);
-            }
-            if ($castType === 'number') {
-                $value = "0$value";
-                return (int)$value;
+            if ($value instanceof Raw) {
+                return $value;
             }
 
-            if ($castType === 'string') {
-                return (string)$value;
-            }
+            try {
+                if ($castType === 'json') {
+                    return json_decode($value);
+                }
+                if ($castType === 'number') {
+                    $value = "0$value";
+                    return (int)$value;
+                }
 
-            if ($castType === 'boolean') {
-                if ($value == 1 || $value === true || $value === "true" || $value === 't') {
-                    return true;
+                if ($castType === 'string') {
+                    return (string)$value;
                 }
-                if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
-                    return false;
+
+                if ($castType === 'boolean') {
+                    if ($value == 1 || $value === true || $value === "true" || $value === 't') {
+                        return true;
+                    }
+                    if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
+                        return false;
+                    }
+                    throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . get_class($this) . '::castTo');
                 }
-                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . get_class($this) . '::castTo');
+            }catch (\TypeError $e) {
+                dd($e->getMessage(), $castType, $value);
             }
 
             throw new Exception('Unknown cast: ' . $castType . ' in ' . get_class($this) . '::castTo');
         }
 
 
-        protected function castForDB(string $castType, $value)
+        protected static function castForDB(string $castType, $value)
         {
+            if ($value instanceof Raw) {
+                return $value;
+            }
+
             if ($castType === 'json') {
                 return json_encode($value, JSON_UNESCAPED_UNICODE);
             }
@@ -526,10 +537,10 @@
                 if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
                     return SQL_FALSE;
                 }
-                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . get_class($this) . '::castForDB');
+                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . static::class. '::castForDB');
             }
 
-            throw new Exception('Unknown cast: ' . $castType . ' in ' . get_class($this) . '::castForDB');
+            throw new Exception('Unknown cast: ' . $castType . ' in ' . static::class. '::castForDB');
         }
 
 

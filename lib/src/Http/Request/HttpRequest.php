@@ -2,7 +2,6 @@
 
     declare(strict_types=1);
 
-
     namespace Sourcegr\Framework\Http\Request;
 
 
@@ -22,54 +21,41 @@
         public const METHOD_PATCH = 'PATCH';
         public const METHOD_DELETE = 'DELETE';
         public const METHOD_OPTIONS = 'OPTIONS';
-
-
         protected $varsBag;
         protected $fileBag;
         protected $serverBag;
         protected $headerBag;
+        protected $payload = null;
         protected $accepts;
-
         protected $expectsJSON = false;
-
         /**
          * the session data
          *
          * @var SessionBag $session
          */
         public $session = null;
-
         /**
          * the cookie data
          *
          * @var COOKIEParameterBag $cookie
          */
         public $cookie;
-
-
         /**
          * @var string $url
          */
         public $url = null;
-
-
         /**
          * @var string $method
          */
         public $method = null;
-
-
         /**
          * @var string $realm
          */
         public $realm = null;
-
-
         /**
          * @var GuardInterface $auth
          */
         public $auth = null;
-
         /**
          * @var $user
          */
@@ -83,11 +69,12 @@
             array $cookie = [],
             array $files = [],
             array $server = []
-        ) {
+        )
+        {
             $this->url = trim($url, "/");
             $this->varsBag = [
                 static::METHOD_GET => new ParameterBag($get),
-                static::METHOD_POST => new ParameterBag($post)
+                static::METHOD_POST => new ParameterBag($post),
             ];
 
             $this->cookie = new COOKIEParameterBag($cookie);
@@ -99,28 +86,28 @@
             $this->createAccepts();
         }
 
+
         protected function createAccepts()
         {
             $all = explode(',', str_replace(' ', '', $this->serverBag->get('HTTP_ACCEPT') ?? ''));
-
 
             foreach ($all as $accept) {
                 $accept = "$accept;q=1";
                 [$type, $quality] = explode(';q=', $accept);
                 $accepts[$type] = $quality;
             }
-//            dd($accepts);
+            //            dd($accepts);
 
             arsort($accepts, SORT_NUMERIC);
             $this->accepts = $accepts;
             $this->expectsJSON = isset($accepts['application/json']) ? true : false;
         }
 
+
         public static function fromHTTP(): RequestInterface
         {
             $url = explode('?', $_SERVER['REQUEST_URI'])[0];
             $request = new static($url, $_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
-
 
             return $request;
         }
@@ -131,7 +118,6 @@
             $normalized = [];
 
             foreach ($files as $index => $file) {
-
                 if (!is_array($file['name'])) {
                     $normalized[$index][] = new UploadedFile($file);
                     continue;
@@ -143,7 +129,7 @@
                         'type' => $file['type'][$index],
                         'tmp_name' => $file['tmp_name'][$index],
                         'error' => $file['error'][$index],
-                        'size' => $file['size'][$index]
+                        'size' => $file['size'][$index],
                     ]);
                 }
             }
@@ -158,34 +144,55 @@
             return $this;
         }
 
+
         public function expectsJson(): bool
         {
             return $this->expectsJSON;
         }
+
 
         public function getMethod(): string
         {
             return $this->method;
         }
 
+
         public function getHeader(string $header = null)
         {
             return $this->headerBag->get($header) ?? null;
         }
+
 
         public function all()
         {
             return $this->varsBag;
         }
 
+
         public function allGET(): ParameterBag
         {
             return $this->all()['GET'];
         }
+
+
         public function allPOST(): ParameterBag
         {
             return $this->all()['POST'];
         }
+
+
+        public function payload(): ?ParameterBag
+        {
+            if (!$this->payload !== null) {
+                try {
+                    parse_str(file_get_contents('php://input'), $_PATCH);
+                    $this->payload = new ParameterBag($_PATCH);
+                } catch (\Exception $e) {
+                }
+            }
+            return $this->payload;
+        }
+
 
         public function get(string $key, string $type = null): ?string
         {
@@ -199,6 +206,7 @@
 
             return $this->varsBag[$type] ? ($this->varsBag[$type]->get($key) ?? null) : null;
         }
+
 
         public function files($key = null)
         {
@@ -216,6 +224,7 @@
             return $this->fileBag->values();
         }
 
+
         public function persistSession()
         {
             if (!$this->session) {
@@ -227,10 +236,12 @@
             $this->session->persist();
         }
 
+
         public function flash(string $name, $value)
         {
             $this->session->setFlash($name, $value);
         }
+
 
         public function addFlash($flashNameOrArray, $flashData = null)
         {
@@ -244,6 +255,7 @@
 
             return $this;
         }
+
 
         public function getBearerToken()
         {
