@@ -35,6 +35,9 @@
         private $returning = null;
 
         protected function wrapWheres($whereStr) {
+            if (!$whereStr && $this->wrap !== null) {
+                return 'WHERE '.$this->wrap;
+            }
 
             if ($this->wrap !== null && strlen($whereStr) > 1) {
                 $whereStr = 'WHERE '.$this->wrap . ' AND ('.preg_replace('/^WHERE /', '', $whereStr).')';

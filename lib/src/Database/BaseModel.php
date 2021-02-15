@@ -16,7 +16,11 @@
 
     class BaseModel
     {
+
+        protected const SQL_FALSE = 'f';
+        protected const SQL_TRUE = 't';
         protected static array $typeCasts = [];
+
         protected static string $table = 'UNINITIALIZED';
         public static string $idField = 'id';
         protected static string $orderCol = 'id';
@@ -74,6 +78,7 @@
             if ($whereClause) {
                 $qb->where($whereClause);
             }
+            $qb->orderBy(static::$orderCol);
 
             $res = $qb->select($fieldsToLoad);
 
@@ -120,6 +125,24 @@
             return $res;
         }
 
+        public static function findOne($where, $fieldsToLoad = null) {
+
+            $data = static::getQueryBuilder()->where($where);
+            if (!$data) {
+                throw BoomException::Http(HTTPResponseCode::HTTP_NOT_FOUND);
+            }
+
+            $data = $data->orderBy(static::$orderCol)->select($fieldsToLoad);
+            if (!count($data)) {
+                throw BoomException::Http(HTTPResponseCode::HTTP_NOT_FOUND);
+            }
+            $data = $data[0];
+            $ent = new static($data[static::$idField]);
+
+
+            $ent->data = $ent->convertArrayDataToModelObjectData($data);
+            return $ent;
+        }
 
         /**
          * @return QueryBuilder
@@ -319,7 +342,7 @@
                 if ($cast == null) {
                     $this->data->$field = $value;
                 }else{
-                    $this->data->$field = $this->castTo($field, $value);
+                    $this->data->$field = $this->castTo($cast, $value);
                 }
             }
             return $this;
@@ -352,9 +375,8 @@
         {
             $r = app()->container->make(RequestInterface::class);
             $u = $r->user ?? null;
-
             if ($u) {
-                return $u->id;
+                return is_array($u) ? $u['id'] : $u->id;
             } else {
                 return 0;
             }
@@ -421,6 +443,10 @@
         }
 
 
+        public static function getTable() {
+            return static::$table;
+        }
+
         /**
          * converts the given object (or the objects data) to array for DB insertion
          *
@@ -431,12 +457,12 @@
         public static function convertModelObjectDataToArray($data)
         {
             $data = (array)$data;
-
             foreach ($data as $field => $value) {
                 $cast = static::$typeCasts[$field] ?? null;
                 if ($cast === null) {
                     continue;
                 }
+
                 $data[$field] = static::castForDB($cast, $value);
             }
 
@@ -518,7 +544,7 @@
             }
 
             if ($castType === 'number') {
-                if ($value == '') {
+                if ($value === '') {
                     return null;
                 }
 
@@ -532,15 +558,15 @@
 
             if ($castType === 'boolean') {
                 if ($value == 1 || $value === true || $value === "true" || $value === 't') {
-                    return SQL_TRUE;
+                    return static::SQL_TRUE;
                 }
                 if ($value == 0 || $value === false || $value === "false" || $value === 'f') {
-                    return SQL_FALSE;
+                    return static::SQL_FALSE;
                 }
-                throw new Exception('Unknown Boolean value: ' . $castType . ' in ' . static::class. '::castForDB');
+                throw new Exception('castForDB: Unknown Boolean value: ' . $castType . ' in ' . static::class. '::castForDB');
             }
 
-            throw new Exception('Unknown cast: ' . $castType . ' in ' . static::class. '::castForDB');
+            throw new Exception('castForDB: Unknown cast: ' . $castType . ' in ' . static::class. '::castForDB');
         }
 
 
